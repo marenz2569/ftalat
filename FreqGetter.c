@@ -24,6 +24,12 @@
 
 #include <unistd.h>
 
+#include <linux/perf_event.h>
+#include <sys/time.h>   
+#include <sys/syscall.h>
+#include <string.h>
+
+
 #include "utils.h"
 
 /**
@@ -149,24 +155,63 @@ unsigned int getCurFreq(unsigned int coreID)
    return freq;
 }
 
+unsigned long long get_cycles(int fd){
+  unsigned long long result;
+  size_t res=read(fd, &result, sizeof(unsigned long long));
+  if (res!=sizeof(unsigned long long))
+    return !(0ULL);
+  return result;
+
+}
+inline unsigned long long getusec(){
+  struct timeval tv;
+  gettimeofday(&tv,NULL);
+  return (unsigned long long)tv.tv_usec+ (unsigned long long)tv.tv_sec*1000000;
+}
+
 inline void waitCurFreq(unsigned int coreID, unsigned int targetFreq)
 {
    assert(coreID < getCoreNumber());
    
-   unsigned int freq = 0;
-   char filePathBuffer[BUFFER_PATH_SIZE]= {'\0'};
-   snprintf(filePathBuffer,BUFFER_PATH_SIZE,CPU_PATH_FORMAT,coreID,"cpuinfo_cur_freq");
-   
-   do
-   {
-      FILE* pFreqFile = fopen(filePathBuffer,"r");
-      if ( pFreqFile != NULL )
-      {
-         fscanf(pFreqFile,"%u",&freq);
-         
-         fclose(pFreqFile);
-      }
-   }while(freq != targetFreq);
+   struct perf_event_attr attr;
+   int nr = 0;
+   static int fd=0;
+   unsigned long long before_cycles,after_cycles,before_time,after_time;
+   unsigned int measuredFreq;
+
+
+      // set up performance counter
+   if (fd==0){
+      memset(&attr,0,sizeof(struct perf_event_attr));
+      attr.type=PERF_TYPE_HARDWARE;
+      attr.config = PERF_COUNT_HW_CPU_CYCLES;
+      fd=syscall(__NR_perf_event_open, &attr, 0, -1, -1, 0);
+   }
+   // until target frequency is set
+   while (1){
+     before_time=getusec();
+     before_cycles=get_cycles(fd);
+     // measure 1 ms
+     do{
+       after_time=getusec();
+     } while ( (after_time-before_time) < 20);
+       
+     after_cycles=get_cycles(fd);
+
+     measuredFreq =(after_cycles-before_cycles)*50 ;
+
+
+     // allow 5 % difference  
+     if ( ((double)measuredFreq/(double)targetFreq)  > 0.95
+           &&
+           ((double)measuredFreq/(double)targetFreq) < 1.05
+         )
+       break;
+     else
+       if ( ( nr % 1000 ) == 900 )
+          printf("Target: %lu, measured: %lu\n" , targetFreq , measuredFreq );
+
+   }
 }
 
 unsigned int getMinAvailableFreq(unsigned int coreID)

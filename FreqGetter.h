@@ -73,4 +73,9 @@ int isFreqAvailable(unsigned int coreID, unsigned int freq);
  */
 void displayAvailableFreqs(unsigned int coreID);
 
+/**
+ * Get current usec in UNIX time
+ */
+inline unsigned long long getusec(void);
+
 #endif

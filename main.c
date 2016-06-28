@@ -46,15 +46,50 @@
 #define NB_VALIDATION_REPET 100
 #define NB_TRY_REPET_LOOP 1000
 #define NB_TRY_REPET 5
+
 const float DIFF_OFFSET_PERCENTAGE = 25.0f;
 
 unsigned long times[NB_BENCH_META_REPET] ;
+
+unsigned long measurements[NB_REPORT_TIMES];
+unsigned long measurements_late[NB_REPORT_TIMES];
+unsigned long long measurements_timestamps[NB_REPORT_TIMES];
+
 
 void usage()
 {
    fprintf(stdout,"./ftalat [-c coreID] startFreq targetFreq\n");
    fprintf(stdout,"\t-c coreID\t:\tto run the test on a precise core (default 0)\n");
 }
+
+// from http://stackoverflow.com/questions/1640258/need-a-fast-random-generator-for-c
+static unsigned long x=123456789, y=362436069, z=521288629;
+
+unsigned long xorshf96(void) {          //period 2^96-1
+unsigned long t;
+    x ^= x << 16;
+    x ^= x >> 5;
+    x ^= x << 1;
+
+   t = x;
+   x = y;
+   y = z;
+   z = t ^ x ^ y;
+
+  return z;
+}
+
+inline void wait(unsigned long time_in_us){
+#ifdef NB_WAIT_RANDOM
+  time_in_us=xorshf96()%time_in_us;
+#endif
+  unsigned long long before_time, after_time;
+  before_time=getusec();
+  do{
+    after_time=getusec();
+  } while (after_time-before_time<time_in_us);
+}
+
 
 double measureLoop(unsigned int nbMetaRepet)
 {
@@ -164,6 +199,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
    {
       unsigned int i = 0;
       unsigned int j = 0;
+      unsigned int it = 0;
       unsigned int niters = 0;
       char validated = 0;
       double validateBenchTime=0;
@@ -171,6 +207,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       unsigned long validateLowBoundTime=0;
       unsigned long validateHighBoundTime=0;
 
+      for (it=0;it<NB_REPORT_TIMES;it++){
       do
       {
          startLoopTime = 0;
@@ -198,6 +235,10 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
          // Validation
          validated = 1;
          times[0] = time;
+         measurements[it]= endLoopTime - startLoopTime;
+         measurements_late[it]= endLoopTime - lateStartLoopTime;
+         measurements_timestamps[it]= endLoopTime ;
+
          for ( i = 1 ; i < NB_VALIDATION_REPET ; i++ )
          {
             times[i] = loop();
@@ -215,22 +256,52 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
          if ( validateHighBoundTime < targetLowBoundTime  || validateLowBoundTime > targetHighBoundTime )
          {
             validated = 0;
-            setFreq(coreID,startFreq);
-            waitCurFreq(coreID,startFreq);
+            if (j%20==19)
+            {
+               setFreq(coreID,targetFreq);
+               waitCurFreq(coreID,targetFreq);
+               targetBenchTime = measureLoop(NB_BENCH_META_REPET);
+               targetBenchSD = sd(NB_BENCH_META_REPET, targetBenchTime, times);
+
+               // Build the inter-quartile range for the target frequency
+               interQuartileRange(NB_BENCH_META_REPET, times,
+                                       &targetQ1, &targetQ3);
+               confidenceInterval(NB_BENCH_META_REPET, targetBenchTime, targetBenchSD,
+                                 &targetLowBoundTime, &targetHighBoundTime);
+               lowBoundTime  = targetQ1;  
+               highBoundTime = targetQ3;  
+            }
          }
+
+         setFreq(coreID,startFreq);
+         waitCurFreq(coreID,startFreq);
+         wait(NB_WAIT_US);
+
       }while(!validated && ++j < NB_TRY_REPET);
 
-      fprintf(stdout,"Number of iterations to solution : %d ;  Number of attempts : %d\n", niters, j+1);	
+      if ( j >= NB_TRY_REPET || validated == 0 ){
+         it--;
+      }
+#if NB_REPORT_TIMES == 1
+      fprintf(stdout,"Number of iterations to solution : %d ;  Number of attempts : %d\n", niters, j+1);
       if ( j >= NB_TRY_REPET || validated == 0 )
          fprintf(stdout,"Warning: The computed change time may not be accurate\n"); 
 
       fprintf(stdout,"LastTime : %lu ; validateLowbound : %lu ; validateHighbound : %lu\n",
               time, validateLowBoundTime,validateHighBoundTime);
-   }
+#endif
+   }}
    
+#if NB_REPORT_TIMES == 1
    fprintf(stdout,"Change time (with write) : %lu\n" ,endLoopTime-startLoopTime);
    fprintf(stdout,"Change time : %lu\n" ,endLoopTime-lateStartLoopTime);
    fprintf(stdout,"Write cost : : %lu\n" ,lateStartLoopTime-startLoopTime);
+#else
+   int i=0; 
+   for (i=0;i<NB_REPORT_TIMES;i++){
+     fprintf(stdout,"%lu\t%llu\t%lu\n",measurements[i],measurements_timestamps[i]-measurements_timestamps[0],measurements_late[i]);
+   }
+#endif
 }
 
 void *thfn(void *arg)
