@@ -329,8 +329,8 @@ void *thfn(void *arg)
 
 void cleanup()
 {
-   // Put back a "neutral" governor
-   setCPUGovernor("ondemand");
+   // Put back a "green" governor
+   setCPUGovernor("powersave");
    
    closeFreqSetterFiles();
    
