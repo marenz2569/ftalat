@@ -163,13 +163,13 @@ unsigned long long get_cycles(int fd){
   return result;
 
 }
-inline unsigned long long getusec(){
+unsigned long long getusec(){
   struct timeval tv;
   gettimeofday(&tv,NULL);
   return (unsigned long long)tv.tv_usec+ (unsigned long long)tv.tv_sec*1000000;
 }
 
-inline void waitCurFreq(unsigned int coreID, unsigned int targetFreq)
+void waitCurFreq(unsigned int coreID, unsigned int targetFreq)
 {
    assert(coreID < getCoreNumber());
    
@@ -191,14 +191,14 @@ inline void waitCurFreq(unsigned int coreID, unsigned int targetFreq)
    while (1){
      before_time=getusec();
      before_cycles=get_cycles(fd);
-     // measure 1 ms
+     // measure 50 us
      do{
        after_time=getusec();
-     } while ( (after_time-before_time) < 20);
+     } while ( (after_time-before_time) < 50);
        
      after_cycles=get_cycles(fd);
 
-     measuredFreq =(after_cycles-before_cycles)*50 ;
+     measuredFreq =(after_cycles-before_cycles)*20 ;
 
 
      // allow 5 % difference  

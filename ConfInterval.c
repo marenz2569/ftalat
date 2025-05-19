@@ -65,11 +65,11 @@ void confidenceInterval(unsigned int n,
    // Zp for 99.9% confidence
    //float z_value = 3.291;
    // Zp for 99% confidence
-   float z_value = 2.346;
+   //float z_value = 2.346;
    // Zp for 97.5% confidence
    //float z_value = 2.257;
-	// A Zp value for 95% confidence level
-	//float z_value = 1.960;
+   // A Zp value for 95% confidence level
+   float z_value = 1.960;
    // at 90% confidence
    // float z_value = 1.645;
    // at 85% confidence

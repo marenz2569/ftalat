@@ -44,7 +44,7 @@
 
 #define NB_BENCH_META_REPET 10000
 #define NB_VALIDATION_REPET 100
-#define NB_TRY_REPET_LOOP 1000
+#define NB_TRY_REPET_LOOP 1000000
 #define NB_TRY_REPET 5
 
 const float DIFF_OFFSET_PERCENTAGE = 25.0f;
@@ -54,6 +54,24 @@ unsigned long times[NB_BENCH_META_REPET] ;
 unsigned long measurements[NB_REPORT_TIMES];
 unsigned long measurements_late[NB_REPORT_TIMES];
 unsigned long long measurements_timestamps[NB_REPORT_TIMES];
+
+inline static unsigned long loop()
+{
+   unsigned long long startTime = 0;
+   unsigned long long endTime = 0;
+   unsigned int i = 0;
+
+   //sync_rdtscll(startTime);
+   sync_rdtsc1(startTime);
+
+   for ( i = 0 ; i < 8; i++ )
+      asmLoop();
+   sync_rdtsc2(endTime);
+   //sync_rdtscll(endTime);
+
+   return (unsigned long) (endTime - startTime);
+}
+
 
 
 void usage()
@@ -137,7 +155,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
    setFreq(coreID,targetFreq);
    waitCurFreq(coreID,targetFreq);
    targetBenchTime = measureLoop(NB_BENCH_META_REPET);
-   fprintf(stdout,"Bench %d %.2f\n",targetFreq, targetBenchTime); 
+   fprintf(stdout,"# Bench %d %.2f\n",targetFreq, targetBenchTime); 
    targetBenchSD = sd(NB_BENCH_META_REPET, targetBenchTime, times);
 
    // Build the inter-quartile range for the target frequency
@@ -147,7 +165,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
    setFreq(coreID,startFreq);
    waitCurFreq(coreID,startFreq);
    startBenchTime = measureLoop(NB_BENCH_META_REPET);  
-   fprintf(stdout,"Bench %d %.2f\n",startFreq, startBenchTime);
+   fprintf(stdout,"# Bench %d %.2f\n",startFreq, startBenchTime);
    startBenchSD = sd(NB_BENCH_META_REPET, startBenchTime, times);
    
 
@@ -155,33 +173,33 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
    confidenceInterval(NB_BENCH_META_REPET, targetBenchTime, targetBenchSD,
 		&targetLowBoundTime, &targetHighBoundTime);
 
-   fprintf(stdout,"targetLowbound : %lu ; targetHighbound : %lu\n",
+   fprintf(stdout,"# targetLowbound : %lu ; targetHighbound : %lu\n",
 			targetLowBoundTime,targetHighBoundTime);
-   fprintf(stdout,"targetQ1 : %lu ; targetQ3 : %lu\n",
+   fprintf(stdout,"# targetQ1 : %lu ; targetQ3 : %lu\n",
 			targetQ1, targetQ3);
 
 
    // Build the confidence interval for the start frequency
    confidenceInterval(NB_BENCH_META_REPET, startBenchTime, startBenchSD,
 		&startLowBoundTime, &startHighBoundTime);
-   fprintf(stdout,"startLowbound : %lu ; startHighbound : %lu\n",
+   fprintf(stdout,"# startLowbound : %lu ; startHighbound : %lu\n",
 			startLowBoundTime,startHighBoundTime);
 
    // Check if the confidence intervals overlap
    if ( startLowBoundTime >= targetHighBoundTime || targetLowBoundTime >= startHighBoundTime )
    {
-   		fprintf(stdout,"Confidence intervals do not overlap, alternatives are statistically different with selected confidence level\n");
+   		fprintf(stdout,"# Confidence intervals do not overlap, alternatives are statistically different with selected confidence level\n");
    }
    else if( startLowBoundTime < targetHighBoundTime || targetLowBoundTime > startHighBoundTime )
    {
 		if( ( startBenchTime >= targetLowBoundTime && startBenchTime <= targetHighBoundTime ) ||
 		    ( targetBenchTime >= startLowBoundTime && targetBenchTime <= startHighBoundTime ) )
 		{
-   			fprintf(stdout,"Warning: confidence intervals overlap considerably, alternatives are equal with selected confidence level\n");
+   			fprintf(stdout,"# Warning: confidence intervals overlap considerably, alternatives are equal with selected confidence level\n");
 			return;
 		}else
 		{
-   			fprintf(stdout,"Warning: confidence intervals overlap, we can not state any thing, need to do the t-test\n");
+   			fprintf(stdout,"# Warning: confidence intervals overlap, we can not state any thing, need to do the t-test\n");
 		}
    }
 
@@ -208,8 +226,8 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       unsigned long validateHighBoundTime=0;
 
       for (it=0;it<NB_REPORT_TIMES;it++){
-      do
-      {
+//      do
+//      {
          startLoopTime = 0;
          lateStartLoopTime = 0;
          endLoopTime = 0;
@@ -246,7 +264,6 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
             writeDump(times[i]);
 #endif            
          }
-
          // Build a confidence interval for the new time value
          validateBenchTime = average(NB_VALIDATION_REPET, times); 
          validateBenchSD   = sd(NB_VALIDATION_REPET, validateBenchTime, times);
@@ -256,32 +273,45 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
          if ( validateHighBoundTime < targetLowBoundTime  || validateLowBoundTime > targetHighBoundTime )
          {
             validated = 0;
-            if (j%20==19)
-            {
-               setFreq(coreID,targetFreq);
-               waitCurFreq(coreID,targetFreq);
-               targetBenchTime = measureLoop(NB_BENCH_META_REPET);
-               targetBenchSD = sd(NB_BENCH_META_REPET, targetBenchTime, times);
+         }
+         setFreq(coreID,startFreq);
+         do
+         {
+            time = loop();
+         } while ( ( time < (startLowBoundTime*.95) || time > (startHighBoundTime*1.05) ) );
+//         waitCurFreq(coreID,startFreq);
 
-               // Build the inter-quartile range for the target frequency
-               interQuartileRange(NB_BENCH_META_REPET, times,
-                                       &targetQ1, &targetQ3);
-               confidenceInterval(NB_BENCH_META_REPET, targetBenchTime, targetBenchSD,
-                                 &targetLowBoundTime, &targetHighBoundTime);
-               lowBoundTime  = targetQ1;  
-               highBoundTime = targetQ3;  
-            }
+         for ( i = 1 ; i < NB_VALIDATION_REPET ; i++ )
+         {
+            times[i] = loop();
+#ifdef _DUMP
+            writeDump(times[i]);
+#endif            
+         }
+         // Build a confidence interval for the new time value
+         validateBenchTime = average(NB_VALIDATION_REPET, times); 
+         validateBenchSD   = sd(NB_VALIDATION_REPET, validateBenchTime, times);
+         confidenceInterval(NB_VALIDATION_REPET, validateBenchTime, validateBenchSD,
+                            &validateLowBoundTime, &validateHighBoundTime);
+
+         if ( validateHighBoundTime < startLowBoundTime  || validateLowBoundTime > startHighBoundTime )
+         {
+            validated = 0;
          }
 
-         setFreq(coreID,startFreq);
-         waitCurFreq(coreID,startFreq);
+
+
          wait(NB_WAIT_US);
 
-      }while(!validated && ++j < NB_TRY_REPET);
+//      }while(!validated );
 
-      if ( j >= NB_TRY_REPET || validated == 0 ){
-         it--;
+      if ( validated == 0 ){
+         measurements[it] =0;
+         measurements_late[it]=0;
+	if (it>0)
+	         measurements_timestamps[it]=measurements_timestamps[it-1];
       }
+//fprintf(stderr,".");
 #if NB_REPORT_TIMES == 1
       fprintf(stdout,"Number of iterations to solution : %d ;  Number of attempts : %d\n", niters, j+1);
       if ( j >= NB_TRY_REPET || validated == 0 )
@@ -298,6 +328,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
    fprintf(stdout,"Write cost : : %lu\n" ,lateStartLoopTime-startLoopTime);
 #else
    int i=0; 
+   fprintf(stdout,"time-long\tabs. time\ttime-short\n");
    for (i=0;i<NB_REPORT_TIMES;i++){
      fprintf(stdout,"%lu\t%llu\t%lu\n",measurements[i],measurements_timestamps[i]-measurements_timestamps[0],measurements_late[i]);
    }

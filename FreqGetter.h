@@ -46,7 +46,7 @@ unsigned int getCurFreq(unsigned int coreID);
  * \param coreID core identifier 
  * \param targetFreq
  */
-inline void waitCurFreq(unsigned int coreID, unsigned int targetFreq);
+void waitCurFreq(unsigned int coreID, unsigned int targetFreq);
 
 /**
  * Get the minimum frequency available for the core identified by \a coreID
@@ -76,6 +76,6 @@ void displayAvailableFreqs(unsigned int coreID);
 /**
  * Get current usec in UNIX time
  */
-inline unsigned long long getusec(void);
+unsigned long long getusec(void);
 
 #endif
