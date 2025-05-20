@@ -468,7 +468,7 @@ int main(int argc, char** argv)
       perror("setscheduler background");
    }
 
-   if ( setCPUGovernor("userspace") != 0 )
+   if ( setCPUGovernor("performance") != 0 )
    {
       fprintf(stderr,"We are unable to set \"userspace\" governor. Do you have cpufreq and permissions ?\n");
       cleanup();

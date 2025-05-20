@@ -30,15 +30,17 @@
 
 #include "utils.h"
 
-FILE** pSetFiles = NULL;
+FILE** pMinSetFiles = NULL;
+FILE** pMaxSetFiles = NULL;
 
 char openFreqSetterFiles()
 {
    unsigned int nbCore = getCoreNumber();
       
-   pSetFiles = malloc(sizeof(FILE*) * nbCore);
+   pMinSetFiles = malloc(sizeof(FILE*) * nbCore);
+   pMaxSetFiles = malloc(sizeof(FILE*) * nbCore);
    
-   if (pSetFiles == NULL)
+   if (pMinSetFiles == NULL || pMaxSetFiles == NULL)
    {
       fprintf(stdout,"Fail to allocate memory for files\n");
       return -1;
@@ -47,8 +49,13 @@ char openFreqSetterFiles()
    unsigned int i = 0;
    for ( i = 0 ; i < nbCore ; i++ )
    {
-      pSetFiles[i] = openCPUFreqFile(i,"scaling_setspeed","w");
-      if ( pSetFiles[i] == NULL )
+      pMinSetFiles[i] = openCPUFreqFile(i,"scaling_min_freq","w");
+      if ( pMinSetFiles[i] == NULL )
+      {
+         return -1;
+      }
+      pMaxSetFiles[i] = openCPUFreqFile(i,"scaling_max_freq","w");
+      if ( pMaxSetFiles[i] == NULL )
       {
          return -1;
       }
@@ -61,8 +68,10 @@ void setFreq(unsigned int coreID, unsigned int targetFreq)
 {
    assert(coreID < getCoreNumber());
    
-   fprintf(pSetFiles[coreID],"%d",targetFreq);
-   fflush(pSetFiles[coreID]);
+   fprintf(pMinSetFiles[coreID],"%d",targetFreq);
+   fflush(pMinSetFiles[coreID]);
+   fprintf(pMaxSetFiles[coreID],"%d",targetFreq);
+   fflush(pMaxSetFiles[coreID]);
 }
 
 void setAllFreq(unsigned int targetFreq)
@@ -72,8 +81,11 @@ void setAllFreq(unsigned int targetFreq)
    
    for (i = 0; i < nbCore ; i++ )
    {
-      fprintf(pSetFiles[i],"%d",targetFreq);
-      fflush(pSetFiles[i]);
+      fprintf(pMinSetFiles[i],"%d",targetFreq);
+      fflush(pMinSetFiles[i]);
+      fprintf(pMaxSetFiles[i],"%d",targetFreq);
+      fflush(pMaxSetFiles[i]);
+
    }
 }
 
@@ -89,17 +101,30 @@ void closeFreqSetterFiles(void)
    int nbCore = getCoreNumber();
    int i = 0;
    
-   if ( pSetFiles )
+   if ( pMinSetFiles )
    {
       for ( i = 0 ; i < nbCore ; i++ )
       {
-         if ( pSetFiles[i] )
+         if ( pMinSetFiles[i] )
          {
-            fclose(pSetFiles[i]);
+            fclose(pMinSetFiles[i]);
          }
       }
       
-      free(pSetFiles);
+      free(pMinSetFiles);
+   }
+
+   if ( pMaxSetFiles )
+   {
+      for ( i = 0 ; i < nbCore ; i++ )
+      {
+         if ( pMaxSetFiles[i] )
+         {
+            fclose(pMaxSetFiles[i]);
+         }
+      }
+      
+      free(pMaxSetFiles);
    }
 }
 

@@ -77,16 +77,22 @@ void initFreqInfo()
    // Get all the frequencies available for all cores
    for ( i = 0 ; i < nbCore ; i++ )
    {
-      FILE* pFreqsFile = openCPUFreqFile(i,"scaling_available_frequencies","r");
-      if ( pFreqsFile != NULL )
+      FILE* pFreqMinFile = openCPUFreqFile(i,"scaling_min_freq","r");
+      FILE* pFreqMaxFile = openCPUFreqFile(i,"scaling_max_freq","r");
+      if ( pFreqMinFile != NULL && pFreqMaxFile != NULL )
       {
+         unsigned int minFreq = 0;
+         unsigned int maxFreq = 0;
+         fscanf(pFreqMinFile,"%u",&minFreq);
+         fscanf(pFreqMaxFile,"%u",&maxFreq);
+
          size_t tabSize = 25;
          pAvailableFreqsTable[i].pFreqs = (unsigned int*) malloc(sizeof(unsigned int) * tabSize); // let's say 25 is enough for an init size
          if ( pAvailableFreqsTable[i].pFreqs != NULL )
          {
-            unsigned int freq = 0;
             size_t counter = 0;
-            while(fscanf(pFreqsFile,"%u",&freq) == 1 )
+            // Loop in 100000 kHz steps over the frequencies.
+            for ( unsigned int freq = minFreq; freq <= maxFreq; freq += 100000 )
             {
                pAvailableFreqsTable[i].pFreqs[counter] = freq;
                counter++;
@@ -114,7 +120,8 @@ void initFreqInfo()
             fprintf(stderr,"Fail to allocated memory for line of frequency table\n");
          }
          
-         fclose(pFreqsFile);
+         fclose(pFreqMinFile);
+         fclose(pFreqMaxFile);
       }
       else
       {
@@ -144,7 +151,7 @@ unsigned int getCurFreq(unsigned int coreID)
    
    unsigned int freq = 0;
    
-   FILE* pFreqFile = openCPUFreqFile(coreID,"cpuinfo_cur_freq","r");
+   FILE* pFreqFile = openCPUFreqFile(coreID,"scaling_cur_freq","r");
    if ( pFreqFile != NULL )
    {
       fscanf(pFreqFile,"%u",&freq);
