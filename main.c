@@ -152,7 +152,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
    unsigned long targetQ1=0;
    unsigned long targetQ3=0;
 
-   setAllFreq(targetFreq);
+   setAllFreq(coreID,targetFreq);
    waitCurFreq(coreID,targetFreq);
    targetBenchTime = measureLoop(NB_BENCH_META_REPET);
    fprintf(stdout,"# Bench %d %.2f\n",targetFreq, targetBenchTime); 
@@ -162,7 +162,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
    interQuartileRange(NB_BENCH_META_REPET, times, 
 		&targetQ1, &targetQ3);
    
-   setAllFreq(startFreq);
+   setAllFreq(coreID,startFreq);
    waitCurFreq(coreID,startFreq);
    startBenchTime = measureLoop(NB_BENCH_META_REPET);  
    fprintf(stdout,"# Bench %d %.2f\n",startFreq, startBenchTime);
@@ -238,7 +238,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
 #endif
 
          sync_rdtsc1(startLoopTime);
-         setAllFreq(targetFreq);
+         setAllFreq(coreID,targetFreq);
          sync_rdtsc1(lateStartLoopTime);
          do
          {
@@ -274,7 +274,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
          {
             validated = 0;
          }
-         setAllFreq(startFreq);
+         setAllFreq(coreID,startFreq);
          do
          {
             time = loop();
