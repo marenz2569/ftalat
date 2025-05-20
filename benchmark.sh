@@ -2,12 +2,12 @@
 
  # TODO: remove this once the branch is merged
  source ~/lab_management_scripts/.venv/bin/activate
- elab ht enable
+ elab ht disable
  elab frequency performance
 
 # measurement for long
 make clean
-export MORE_FLAGS="-DNB_WAIT_RANDOM -DNB_WAIT_US=10000 -DNB_REPORT_TIMES=10000"
+export MORE_FLAGS="-DNB_WAIT_RANDOM -DNB_WAIT_US=10000 -DNB_REPORT_TIMES=1000"
 make
 
 rm -r 10ksamples || true
