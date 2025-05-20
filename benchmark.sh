@@ -1,6 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 
-mkdir -p 10ksamples/p-core 2> /dev/null
+# measurement for long
+make clean
+export MORE_FLAGS="-DNB_WAIT_RANDOM -DNB_WAIT_US=10000 -DNB_REPORT_TIMES=10000"
+make
+
+rm -r 10ksamples || true
+mkdir -p 10ksamples
 
 FREQUENCIES=`cat scaling_available_frequencies`
 
@@ -14,9 +20,8 @@ do
 	            continue
         	 fi
 
-		# measurement for long
-                export MORE_FLAGS="-DNB_WAIT_RANDOM -DNB_WAIT_US=10000 -DNB_REPORT_TIMES=10000"
-                make
+		 echo "Running $START -> $TARGET"
+
                 sudo ./ftalat $START $TARGET > 10ksamples/p-core/${START}_${TARGET}-out_random_10000ms_10000sa.txt
 
 	done
