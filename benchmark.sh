@@ -22,7 +22,7 @@ do
 
 		 echo "Running $START -> $TARGET"
 
-                sudo ./ftalat $START $TARGET > 10ksamples/p-core/${START}_${TARGET}-out_random_10000ms_10000sa.txt
+                sudo ./ftalat $START $TARGET > 10ksamples/${START}_${TARGET}-out_random_10000ms_10000sa.txt
 
 	done
 done
