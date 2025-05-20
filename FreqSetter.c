@@ -30,17 +30,15 @@
 
 #include "utils.h"
 
-FILE** pMinSetFiles = NULL;
 FILE** pMaxSetFiles = NULL;
 
 char openFreqSetterFiles()
 {
    unsigned int nbCore = getCoreNumber();
       
-   pMinSetFiles = malloc(sizeof(FILE*) * nbCore);
    pMaxSetFiles = malloc(sizeof(FILE*) * nbCore);
    
-   if (pMinSetFiles == NULL || pMaxSetFiles == NULL)
+   if (pMaxSetFiles == NULL)
    {
       fprintf(stdout,"Fail to allocate memory for files\n");
       return -1;
@@ -49,11 +47,6 @@ char openFreqSetterFiles()
    unsigned int i = 0;
    for ( i = 0 ; i < nbCore ; i++ )
    {
-      pMinSetFiles[i] = openCPUFreqFile(i,"scaling_min_freq","w");
-      if ( pMinSetFiles[i] == NULL )
-      {
-         return -1;
-      }
       pMaxSetFiles[i] = openCPUFreqFile(i,"scaling_max_freq","w");
       if ( pMaxSetFiles[i] == NULL )
       {
@@ -68,8 +61,6 @@ void setFreq(unsigned int coreID, unsigned int targetFreq)
 {
    assert(coreID < getCoreNumber());
    
-   fprintf(pMinSetFiles[coreID],"%d",targetFreq);
-   fflush(pMinSetFiles[coreID]);
    fprintf(pMaxSetFiles[coreID],"%d",targetFreq);
    fflush(pMaxSetFiles[coreID]);
 }
@@ -81,8 +72,6 @@ void setAllFreq(unsigned int targetFreq)
    
    for (i = 0; i < nbCore ; i++ )
    {
-      fprintf(pMinSetFiles[i],"%d",targetFreq);
-      fflush(pMinSetFiles[i]);
       fprintf(pMaxSetFiles[i],"%d",targetFreq);
       fflush(pMaxSetFiles[i]);
 
@@ -101,19 +90,6 @@ void closeFreqSetterFiles(void)
    int nbCore = getCoreNumber();
    int i = 0;
    
-   if ( pMinSetFiles )
-   {
-      for ( i = 0 ; i < nbCore ; i++ )
-      {
-         if ( pMinSetFiles[i] )
-         {
-            fclose(pMinSetFiles[i]);
-         }
-      }
-      
-      free(pMinSetFiles);
-   }
-
    if ( pMaxSetFiles )
    {
       for ( i = 0 ; i < nbCore ; i++ )
