@@ -114,8 +114,8 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   // Build the confidence interval for the start frequency
   confidenceInterval(NB_BENCH_META_REPET, startBenchTime, startBenchSD, &startLowBoundTime, &startHighBoundTime);
 
-  fprintf(stdout, "# Loop @ Start frequency %dkHz took %.2f cycles\n", startFreq, startBenchTime);
-  fprintf(stdout, "# Loop @ Target frequency %dkHz took %.2f cycles\n", targetFreq, targetBenchTime);
+  fprintf(stdout, "# Loop @ Start frequency %dHz took %.2f cycles\n", startFreq, startBenchTime);
+  fprintf(stdout, "# Loop @ Target frequency %dHz took %.2f cycles\n", targetFreq, targetBenchTime);
   fprintf(stdout, "# startLowbound : %lu ; startHighbound : %lu\n", startLowBoundTime, startHighBoundTime);
   fprintf(stdout, "# targetLowbound : %lu ; targetHighbound : %lu\n", targetLowBoundTime, targetHighBoundTime);
   fprintf(stdout, "# targetQ1 : %lu ; targetQ3 : %lu\n", targetQ1, targetQ3);
