@@ -69,22 +69,11 @@ inline void wait(unsigned long time_in_us) {
 }
 
 double measureLoop(unsigned int nbMetaRepet) {
-  unsigned int i = 0;
-  double mediumTime = 0;
-
-  for (i = 0; i < nbMetaRepet; i++) {
+  for (unsigned int i = 0; i < nbMetaRepet; i++) {
     times[i] = loop();
   }
 
-  /*printf("Calibration :\n");
-  for ( i = 0 ; i < nbMetaRepet ; i++ )
-  {
-       printf("%lu ", times[i]);
-  }
-  printf("\n");*/
-
-  mediumTime = average(nbMetaRepet, times);
-  return mediumTime;
+  return average(nbMetaRepet, times);
 }
 
 void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreID) {
@@ -111,27 +100,25 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   setFreq(coreID, targetFreq);
   waitCurFreq(coreID, targetFreq);
   targetBenchTime = measureLoop(NB_BENCH_META_REPET);
-  fprintf(stdout, "# Bench %d %.2f\n", targetFreq, targetBenchTime);
   targetBenchSD = sd(NB_BENCH_META_REPET, targetBenchTime, times);
 
+  // Build the confidence interval for the target frequency
+  confidenceInterval(NB_BENCH_META_REPET, targetBenchTime, targetBenchSD, &targetLowBoundTime, &targetHighBoundTime);
   // Build the inter-quartile range for the target frequency
   interQuartileRange(NB_BENCH_META_REPET, times, &targetQ1, &targetQ3);
 
   setFreq(coreID, startFreq);
   waitCurFreq(coreID, startFreq);
   startBenchTime = measureLoop(NB_BENCH_META_REPET);
-  fprintf(stdout, "# Bench %d %.2f\n", startFreq, startBenchTime);
   startBenchSD = sd(NB_BENCH_META_REPET, startBenchTime, times);
-
-  // Build the confidence interval for the target frequency
-  confidenceInterval(NB_BENCH_META_REPET, targetBenchTime, targetBenchSD, &targetLowBoundTime, &targetHighBoundTime);
-
-  fprintf(stdout, "# targetLowbound : %lu ; targetHighbound : %lu\n", targetLowBoundTime, targetHighBoundTime);
-  fprintf(stdout, "# targetQ1 : %lu ; targetQ3 : %lu\n", targetQ1, targetQ3);
-
   // Build the confidence interval for the start frequency
   confidenceInterval(NB_BENCH_META_REPET, startBenchTime, startBenchSD, &startLowBoundTime, &startHighBoundTime);
+
+  fprintf(stdout, "# Loop @ Start frequency %dkHz took %.2f cycles\n", startFreq, startBenchTime);
+  fprintf(stdout, "# Loop @ Target frequency %dkHz took %.2f cycles\n", targetFreq, targetBenchTime);
   fprintf(stdout, "# startLowbound : %lu ; startHighbound : %lu\n", startLowBoundTime, startHighBoundTime);
+  fprintf(stdout, "# targetLowbound : %lu ; targetHighbound : %lu\n", targetLowBoundTime, targetHighBoundTime);
+  fprintf(stdout, "# targetQ1 : %lu ; targetQ3 : %lu\n", targetQ1, targetQ3);
 
   // Check if the confidence intervals overlap
   if (startLowBoundTime >= targetHighBoundTime || targetLowBoundTime >= startHighBoundTime) {
@@ -148,9 +135,6 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
                       "state any thing, need to do the t-test\n");
     }
   }
-
-  // lowBoundTime  = targetLowBoundTime ;
-  // highBoundTime = targetHighBoundTime;
 
   // Now we use the inter-quartile range
   lowBoundTime = targetQ1;
