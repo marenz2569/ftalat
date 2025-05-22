@@ -7,16 +7,10 @@ LDFLAGS=
 MORE_FLAGS?=-DNB_WAIT_RANDOM -DNB_WAIT_US=10000 -DNB_REPORT_TIMES=1000
 
 
-.PHONY: all trace doc clean
+.PHONY: all clean
 
 all:
 	$(CC) $(MORE_FLAGS) $(CFLAGS) $(LDFLAGS) main.c loop.c FreqGetter.c FreqSetter.c utils.c ConfInterval.c -o ftalat -lm -pthread
-
-trace:
-	$(CC) $(CFLAGS) $(LDFLAGS) -D_DUMP main.c loop.c dumpResults.c FreqGetter.c FreqSetter.c utils.c ConfInterval.c -o ftalat -lm -pthread
-
-doc:
-	doxygen ./ftalat.doxy
 
 clean:
 	rm -f ./ftalat
