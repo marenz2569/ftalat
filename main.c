@@ -27,7 +27,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "CoreRelation.h"
 #include "FreqGetter.h"
 #include "FreqSetter.h"
 
@@ -333,7 +332,6 @@ void cleanup() {
 
   closeFreqSetterFiles();
 
-  freeCoreRelations();
   freeFreqInfo();
 
 #ifdef _DUMP
@@ -410,8 +408,6 @@ int main(int argc, char** argv) {
     return -7;
   }
 
-  initCoreRelations();
-
 #ifdef _DUMP
   openDump("./results.dump", NB_TRY_REPET_LOOP * NB_VALIDATION_REPET);
 #endif
@@ -441,7 +437,6 @@ int main(int argc, char** argv) {
     return -3;
   }
 
-  setFreqForAllRelatedCore(coreID, getMinAvailableFreq(coreID));
   runTest(startFreq, targetFreq, coreID);
 
   // kill bg thread
