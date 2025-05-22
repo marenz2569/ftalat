@@ -288,31 +288,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
 #endif
 }
 
-void* thfn(void* arg) {
-  struct sched_param sp;
-
-  (void)arg;
-
-  // cancel me at anytime
-  pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
-
-  // go batch, min prio
-  sched_getparam(0, &sp);
-  sp.sched_priority = sched_get_priority_min(SCHED_BATCH);
-  if (sched_setscheduler(0, SCHED_BATCH, &sp)) {
-    perror("setscheduler background");
-  }
-
-  while (1)
-    ;
-
-  return NULL;
-}
-
 void cleanup() {
-  // Put back a "green" governor
-  setCPUGovernor("powersave");
-
   closeFreqSetterFiles();
 
   freeFreqInfo();
@@ -323,9 +299,6 @@ void cleanup() {
 }
 
 int main(int argc, char** argv) {
-  struct sched_param sp;
-  pthread_t bgth;
-
   if (argc != 3 && argc != 5) {
     usage();
     return -1;
@@ -371,48 +344,11 @@ int main(int argc, char** argv) {
 
   initFreqInfo();
 
-  if (isFreqAvailable(coreID, startFreq) == 0) {
-    fprintf(stdout,
-            "The starting frequency that you have entered (%d) is not "
-            "available for the core %d\n",
-            startFreq, coreID);
-    fprintf(stdout, "Aborting");
-    cleanup();
-    return -6;
-  }
-
-  if (isFreqAvailable(coreID, targetFreq) == 0) {
-    fprintf(stdout,
-            "The target frequency that you have entered (%d) is not available "
-            "for the core %d\n",
-            targetFreq, coreID);
-    fprintf(stdout, "Aborting");
-    cleanup();
-    return -7;
-  }
-
 #ifdef _DUMP
   openDump("./results.dump", NB_TRY_REPET_LOOP * NB_VALIDATION_REPET);
 #endif
 
   pinCPU(coreID);
-
-  // create a background task to keep CPU awaken
-  pthread_create(&bgth, NULL, thfn, NULL);
-
-  // go realtime, max prio
-  sched_getparam(0, &sp);
-  sp.sched_priority = sched_get_priority_max(SCHED_FIFO);
-  if (sched_setscheduler(0, SCHED_FIFO, &sp)) {
-    perror("setscheduler background");
-  }
-
-  if (setCPUGovernor("performance") != 0) {
-    fprintf(stderr, "We are unable to set \"userspace\" governor. Do you have "
-                    "cpufreq and permissions ?\n");
-    cleanup();
-    return -5;
-  }
 
   // Set the minimal frequency
   if (openFreqSetterFiles() != 0) {
@@ -422,9 +358,7 @@ int main(int argc, char** argv) {
 
   runTest(startFreq, targetFreq, coreID);
 
-  // kill bg thread
-  pthread_cancel(bgth);
-
   cleanup();
+
   return 0;
 }
