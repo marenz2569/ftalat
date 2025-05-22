@@ -1,0 +1,13 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+
+  build:
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Make
+      run: |
+        make
