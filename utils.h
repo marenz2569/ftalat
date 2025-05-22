@@ -43,4 +43,9 @@ FILE* openCPUFreqFile(unsigned int coreID, const char* fileName, const char* mod
  */
 void pinCPU(int cpu);
 
+/*
+ * Fast hashing algorithm
+ */
+unsigned long xorshf96();
+
 #endif

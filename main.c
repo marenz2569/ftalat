@@ -57,24 +57,6 @@ void usage() {
   fprintf(stdout, "\t-c coreID\t:\tto run the test on a precise core (default 0)\n");
 }
 
-// from
-// http://stackoverflow.com/questions/1640258/need-a-fast-random-generator-for-c
-static unsigned long x = 123456789, y = 362436069, z = 521288629;
-
-unsigned long xorshf96(void) { // period 2^96-1
-  unsigned long t;
-  x ^= x << 16;
-  x ^= x >> 5;
-  x ^= x << 1;
-
-  t = x;
-  x = y;
-  y = z;
-  z = t ^ x ^ y;
-
-  return z;
-}
-
 inline void wait(unsigned long time_in_us) {
 #ifdef NB_WAIT_RANDOM
   time_in_us = xorshf96() % time_in_us;
