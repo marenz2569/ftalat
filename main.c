@@ -31,7 +31,6 @@
 #include "FreqSetter.h"
 
 #include "loop.h"
-#include "measure.h"
 #include "rdtsc.h"
 #include "utils.h"
 
