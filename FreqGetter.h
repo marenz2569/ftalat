@@ -36,14 +36,14 @@ void freeFreqInfo();
 
 /**
  * Get the current frequency for core identified by \a coreID
- * \param coreID core identifier 
+ * \param coreID core identifier
  * \return the frequency actually set
  */
 unsigned int getCurFreq(unsigned int coreID);
 
 /**
  * Wait the core identified by \a coreID to be at \a targetFreq frequency
- * \param coreID core identifier 
+ * \param coreID core identifier
  * \param targetFreq
  */
 void waitCurFreq(unsigned int coreID, unsigned int targetFreq);

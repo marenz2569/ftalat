@@ -20,11 +20,10 @@
 
 #include <stdio.h>
 
-void displayMeasure(Measure measure)
-{
-   fprintf(stdout, "\t=====\n");
-   fprintf(stdout, "Min Time : %llu\n",measure.min);
-   fprintf(stdout, "Max Time : %llu\n",measure.max);
-   fprintf(stdout, "Medium : %llu\n",measure.medium);
-   fprintf(stdout, "\t=====\n");
+void displayMeasure(Measure measure) {
+  fprintf(stdout, "\t=====\n");
+  fprintf(stdout, "Min Time : %llu\n", measure.min);
+  fprintf(stdout, "Max Time : %llu\n", measure.max);
+  fprintf(stdout, "Medium : %llu\n", measure.medium);
+  fprintf(stdout, "\t=====\n");
 }

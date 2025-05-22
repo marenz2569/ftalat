@@ -48,12 +48,11 @@ void setAllFreq(unsigned int targetFreq);
  */
 void setMinFreqForAll();
 
-
 /**
  * Set a new cpufreq governor for all cores
  * \param newPolicy the new governor to set
  * \return 0 is everything gone fine
  */
-char setCPUGovernor(const char* newPolicy);
+char setCPUGovernor(const char *newPolicy);
 
 #endif

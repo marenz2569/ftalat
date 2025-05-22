@@ -21,16 +21,10 @@
 
 double average(unsigned int n, unsigned long *times);
 double sd(unsigned int n, double average, unsigned long *times);
-void confidenceInterval(unsigned int n, 
-						double average, 
-						double sd, 
-						unsigned long *lowBoundTime, 
-						unsigned long *highBoundTime 
-						);
-void interQuartileRange(unsigned int n, 
-						unsigned long *times,
-						unsigned long *lowBoundTime, 
-						unsigned long *highBoundTime 
-						);
+void confidenceInterval(unsigned int n, double average, double sd,
+                        unsigned long *lowBoundTime,
+                        unsigned long *highBoundTime);
+void interQuartileRange(unsigned int n, unsigned long *times,
+                        unsigned long *lowBoundTime,
+                        unsigned long *highBoundTime);
 #endif
-

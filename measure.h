@@ -23,12 +23,11 @@
  * \struct Measure
  * Simple structure to keep track of measure
  */
-typedef struct Measure
-{
-   unsigned long long min; /*!< */
-   unsigned long long max; /*!< */
-   unsigned long long medium; /*!< */
-}Measure;
+typedef struct Measure {
+  unsigned long long min;    /*!< */
+  unsigned long long max;    /*!< */
+  unsigned long long medium; /*!< */
+} Measure;
 
 /**
  * Display on stdout the \a Measure
