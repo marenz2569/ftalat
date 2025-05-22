@@ -53,22 +53,6 @@ unsigned long measurements[NB_REPORT_TIMES];
 unsigned long measurements_late[NB_REPORT_TIMES];
 unsigned long long measurements_timestamps[NB_REPORT_TIMES];
 
-inline static unsigned long loop() {
-  unsigned long long startTime = 0;
-  unsigned long long endTime = 0;
-  unsigned int i = 0;
-
-  // sync_rdtscll(startTime);
-  sync_rdtsc1(startTime);
-
-  for (i = 0; i < 8; i++)
-    asmLoop();
-  sync_rdtsc2(endTime);
-  // sync_rdtscll(endTime);
-
-  return (unsigned long)(endTime - startTime);
-}
-
 void usage() {
   fprintf(stdout, "./ftalat [-c coreID] startFreq targetFreq\n");
   fprintf(stdout, "\t-c coreID\t:\tto run the test on a precise core (default 0)\n");

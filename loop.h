@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include "loop.h"
+#ifndef LOOP_H
+#define LOOP_H
 
-#include <stdio.h>
-
-#include "rdtsc.h"
-
-const unsigned int NB_ITER = 30L;
+/*
+ * The assembler work loop. Returns the number of TSC counter cycles this loops took to execute.
+ */
+unsigned long loop();
 
 #define asmLoop()                                                                                                      \
   {                                                                                                                    \
@@ -158,3 +158,5 @@ const unsigned int NB_ITER = 30L;
                  :                                                                                                     \
                  : "%eax");                                                                                            \
   }
+
+#endif
