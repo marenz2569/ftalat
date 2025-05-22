@@ -26,7 +26,7 @@
  * \param pFilename the filename where to write datas
  * \param bufferSize the maximal size of the buffer
  */
-void openDump(const char *pFileName, unsigned int bufferSize);
+void openDump(const char* pFileName, unsigned int bufferSize);
 
 /**
  * Write the time in the dump system

@@ -33,10 +33,10 @@
  */
 typedef struct CoreRelations {
   unsigned int nbRelations; /*!< number of elements in coreIDs */
-  unsigned int *coreIDs;    /*!< IDs related to the current core */
+  unsigned int* coreIDs;    /*!< IDs related to the current core */
 } CoreRelations;
 
-CoreRelations *pRelationsTable = NULL;
+CoreRelations* pRelationsTable = NULL;
 
 void initCoreRelations() {
   assert(pRelationsTable == NULL);
@@ -45,20 +45,19 @@ void initCoreRelations() {
   unsigned int i = 0;
 
   // Allocate memory for the table
-  pRelationsTable = (CoreRelations *)calloc(nbCore, sizeof(CoreRelations));
+  pRelationsTable = (CoreRelations*)calloc(nbCore, sizeof(CoreRelations));
   if (pRelationsTable == NULL) {
     fprintf(stderr, "Error to allocate memory for relation table\n");
     return;
   }
 
   for (i = 0; i < nbCore; i++) {
-    FILE *pRelationFile = openCPUFreqFile(i, "related_cpus", "r");
+    FILE* pRelationFile = openCPUFreqFile(i, "related_cpus", "r");
     if (pRelationFile) {
       size_t tabSize = nbCore + 1;
 
-      pRelationsTable[i].coreIDs = (unsigned int *)malloc(
-          sizeof(unsigned int) *
-          tabSize); // let's say 25 is enough for an init size
+      pRelationsTable[i].coreIDs =
+          (unsigned int*)malloc(sizeof(unsigned int) * tabSize); // let's say 25 is enough for an init size
       if (pRelationsTable[i].coreIDs != NULL) {
         unsigned int coreID = 0;
         size_t counter = 0;
@@ -69,13 +68,11 @@ void initCoreRelations() {
           {
             // Double size
             tabSize *= 2;
-            unsigned int *newFreqsTab = realloc(pRelationsTable[i].coreIDs,
-                                                tabSize * sizeof(unsigned int));
+            unsigned int* newFreqsTab = realloc(pRelationsTable[i].coreIDs, tabSize * sizeof(unsigned int));
             if (newFreqsTab != NULL) {
               pRelationsTable[i].coreIDs = newFreqsTab;
             } else {
-              fprintf(stderr,
-                      "Fail to allocate more memory for relations table\n");
+              fprintf(stderr, "Fail to allocate more memory for relations table\n");
               break;
             }
           }
@@ -83,8 +80,7 @@ void initCoreRelations() {
 
         pRelationsTable[i].nbRelations = counter;
       } else {
-        fprintf(stderr,
-                "Fail to allocated memory for line of core relation table\n");
+        fprintf(stderr, "Fail to allocated memory for line of core relation table\n");
       }
 
       fclose(pRelationFile);
@@ -109,8 +105,7 @@ unsigned int getHeadCore(unsigned int coreID) {
   assert(coreID < getCoreNumber());
 
   if (pRelationsTable[coreID].coreIDs) {
-    return pRelationsTable[coreID]
-        .coreIDs[0]; // I think the first is always master
+    return pRelationsTable[coreID].coreIDs[0]; // I think the first is always master
   }
 
   return 0;

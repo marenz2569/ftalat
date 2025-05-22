@@ -72,8 +72,7 @@ inline static unsigned long loop() {
 
 void usage() {
   fprintf(stdout, "./ftalat [-c coreID] startFreq targetFreq\n");
-  fprintf(stdout,
-          "\t-c coreID\t:\tto run the test on a precise core (default 0)\n");
+  fprintf(stdout, "\t-c coreID\t:\tto run the test on a precise core (default 0)\n");
 }
 
 // from
@@ -124,8 +123,7 @@ double measureLoop(unsigned int nbMetaRepet) {
   return mediumTime;
 }
 
-void runTest(unsigned int startFreq, unsigned int targetFreq,
-             unsigned int coreID) {
+void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreID) {
   double startBenchTime = 0;
   double targetBenchTime = 0;
   unsigned long lowBoundTime = 0;
@@ -162,33 +160,24 @@ void runTest(unsigned int startFreq, unsigned int targetFreq,
   startBenchSD = sd(NB_BENCH_META_REPET, startBenchTime, times);
 
   // Build the confidence interval for the target frequency
-  confidenceInterval(NB_BENCH_META_REPET, targetBenchTime, targetBenchSD,
-                     &targetLowBoundTime, &targetHighBoundTime);
+  confidenceInterval(NB_BENCH_META_REPET, targetBenchTime, targetBenchSD, &targetLowBoundTime, &targetHighBoundTime);
 
-  fprintf(stdout, "# targetLowbound : %lu ; targetHighbound : %lu\n",
-          targetLowBoundTime, targetHighBoundTime);
+  fprintf(stdout, "# targetLowbound : %lu ; targetHighbound : %lu\n", targetLowBoundTime, targetHighBoundTime);
   fprintf(stdout, "# targetQ1 : %lu ; targetQ3 : %lu\n", targetQ1, targetQ3);
 
   // Build the confidence interval for the start frequency
-  confidenceInterval(NB_BENCH_META_REPET, startBenchTime, startBenchSD,
-                     &startLowBoundTime, &startHighBoundTime);
-  fprintf(stdout, "# startLowbound : %lu ; startHighbound : %lu\n",
-          startLowBoundTime, startHighBoundTime);
+  confidenceInterval(NB_BENCH_META_REPET, startBenchTime, startBenchSD, &startLowBoundTime, &startHighBoundTime);
+  fprintf(stdout, "# startLowbound : %lu ; startHighbound : %lu\n", startLowBoundTime, startHighBoundTime);
 
   // Check if the confidence intervals overlap
-  if (startLowBoundTime >= targetHighBoundTime ||
-      targetLowBoundTime >= startHighBoundTime) {
+  if (startLowBoundTime >= targetHighBoundTime || targetLowBoundTime >= startHighBoundTime) {
     fprintf(stdout, "# Confidence intervals do not overlap, alternatives are "
                     "statistically different with selected confidence level\n");
-  } else if (startLowBoundTime < targetHighBoundTime ||
-             targetLowBoundTime > startHighBoundTime) {
-    if ((startBenchTime >= targetLowBoundTime &&
-         startBenchTime <= targetHighBoundTime) ||
-        (targetBenchTime >= startLowBoundTime &&
-         targetBenchTime <= startHighBoundTime)) {
-      fprintf(stdout,
-              "# Warning: confidence intervals overlap considerably, "
-              "alternatives are equal with selected confidence level\n");
+  } else if (startLowBoundTime < targetHighBoundTime || targetLowBoundTime > startHighBoundTime) {
+    if ((startBenchTime >= targetLowBoundTime && startBenchTime <= targetHighBoundTime) ||
+        (targetBenchTime >= startLowBoundTime && targetBenchTime <= startHighBoundTime)) {
+      fprintf(stdout, "# Warning: confidence intervals overlap considerably, "
+                      "alternatives are equal with selected confidence level\n");
       return;
     } else {
       fprintf(stdout, "# Warning: confidence intervals overlap, we can not "
@@ -235,8 +224,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq,
 #ifdef _DUMP
         writeDump(time);
 #endif
-      } while ((time < lowBoundTime || time > highBoundTime) &&
-               ++niters < NB_TRY_REPET_LOOP);
+      } while ((time < lowBoundTime || time > highBoundTime) && ++niters < NB_TRY_REPET_LOOP);
 
       sync_rdtsc2(endLoopTime);
 
@@ -256,19 +244,16 @@ void runTest(unsigned int startFreq, unsigned int targetFreq,
       // Build a confidence interval for the new time value
       validateBenchTime = average(NB_VALIDATION_REPET, times);
       validateBenchSD = sd(NB_VALIDATION_REPET, validateBenchTime, times);
-      confidenceInterval(NB_VALIDATION_REPET, validateBenchTime,
-                         validateBenchSD, &validateLowBoundTime,
+      confidenceInterval(NB_VALIDATION_REPET, validateBenchTime, validateBenchSD, &validateLowBoundTime,
                          &validateHighBoundTime);
 
-      if (validateHighBoundTime < targetLowBoundTime ||
-          validateLowBoundTime > targetHighBoundTime) {
+      if (validateHighBoundTime < targetLowBoundTime || validateLowBoundTime > targetHighBoundTime) {
         validated = 0;
       }
       setFreq(coreID, startFreq);
       do {
         time = loop();
-      } while ((time < (startLowBoundTime * .95) ||
-                time > (startHighBoundTime * 1.05)));
+      } while ((time < (startLowBoundTime * .95) || time > (startHighBoundTime * 1.05)));
       //         waitCurFreq(coreID,startFreq);
 
       for (i = 1; i < NB_VALIDATION_REPET; i++) {
@@ -280,12 +265,10 @@ void runTest(unsigned int startFreq, unsigned int targetFreq,
       // Build a confidence interval for the new time value
       validateBenchTime = average(NB_VALIDATION_REPET, times);
       validateBenchSD = sd(NB_VALIDATION_REPET, validateBenchTime, times);
-      confidenceInterval(NB_VALIDATION_REPET, validateBenchTime,
-                         validateBenchSD, &validateLowBoundTime,
+      confidenceInterval(NB_VALIDATION_REPET, validateBenchTime, validateBenchSD, &validateLowBoundTime,
                          &validateHighBoundTime);
 
-      if (validateHighBoundTime < startLowBoundTime ||
-          validateLowBoundTime > startHighBoundTime) {
+      if (validateHighBoundTime < startLowBoundTime || validateLowBoundTime > startHighBoundTime) {
         validated = 0;
       }
 
@@ -299,39 +282,31 @@ void runTest(unsigned int startFreq, unsigned int targetFreq,
       }
 // fprintf(stderr,".");
 #if NB_REPORT_TIMES == 1
-      fprintf(
-          stdout,
-          "Number of iterations to solution : %d ;  Number of attempts : %d\n",
-          niters, j + 1);
+      fprintf(stdout, "Number of iterations to solution : %d ;  Number of attempts : %d\n", niters, j + 1);
       if (j >= NB_TRY_REPET || validated == 0)
-        fprintf(stdout,
-                "Warning: The computed change time may not be accurate\n");
+        fprintf(stdout, "Warning: The computed change time may not be accurate\n");
 
-      fprintf(
-          stdout,
-          "LastTime : %lu ; validateLowbound : %lu ; validateHighbound : %lu\n",
-          time, validateLowBoundTime, validateHighBoundTime);
+      fprintf(stdout, "LastTime : %lu ; validateLowbound : %lu ; validateHighbound : %lu\n", time, validateLowBoundTime,
+              validateHighBoundTime);
 #endif
     }
   }
 
 #if NB_REPORT_TIMES == 1
-  fprintf(stdout, "Change time (with write) : %lu\n",
-          endLoopTime - startLoopTime);
+  fprintf(stdout, "Change time (with write) : %lu\n", endLoopTime - startLoopTime);
   fprintf(stdout, "Change time : %lu\n", endLoopTime - lateStartLoopTime);
   fprintf(stdout, "Write cost : : %lu\n", lateStartLoopTime - startLoopTime);
 #else
   int i = 0;
   fprintf(stdout, "time-long\tabs. time\ttime-short\n");
   for (i = 0; i < NB_REPORT_TIMES; i++) {
-    fprintf(stdout, "%lu\t%llu\t%lu\n", measurements[i],
-            measurements_timestamps[i] - measurements_timestamps[0],
+    fprintf(stdout, "%lu\t%llu\t%lu\n", measurements[i], measurements_timestamps[i] - measurements_timestamps[0],
             measurements_late[i]);
   }
 #endif
 }
 
-void *thfn(void *arg) {
+void* thfn(void* arg) {
   struct sched_param sp;
 
   (void)arg;
@@ -366,7 +341,7 @@ void cleanup() {
 #endif
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   struct sched_param sp;
   pthread_t bgth;
 

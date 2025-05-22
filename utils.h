@@ -34,8 +34,7 @@
  * \return the file
  * \warning don't forget to close the pointeur returned with fclose
  */
-FILE *openCPUFreqFile(unsigned int coreID, const char *fileName,
-                      const char *mode);
+FILE* openCPUFreqFile(unsigned int coreID, const char* fileName, const char* mode);
 
 /**
  * Pin the current program to a specific core using CPU_SET and

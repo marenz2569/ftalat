@@ -27,12 +27,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-FILE *openCPUFreqFile(unsigned int coreID, const char *fileName,
-                      const char *mode) {
+FILE* openCPUFreqFile(unsigned int coreID, const char* fileName, const char* mode) {
   char filePathBuffer[BUFFER_PATH_SIZE] = {'\0'};
   snprintf(filePathBuffer, BUFFER_PATH_SIZE, CPU_PATH_FORMAT, coreID, fileName);
 
-  FILE *pFile = fopen(filePathBuffer, mode);
+  FILE* pFile = fopen(filePathBuffer, mode);
   if (pFile == NULL) {
     fprintf(stderr, "Fail to open %s\n", filePathBuffer);
   }

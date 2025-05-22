@@ -22,13 +22,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-FILE *pDumpFile = NULL;
+FILE* pDumpFile = NULL;
 
-unsigned int *pBuf = NULL;
+unsigned int* pBuf = NULL;
 unsigned int bufCapacity = 0;
 unsigned int bufSize = 0;
 
-void openDump(const char *pFileName, unsigned int bufferSize) {
+void openDump(const char* pFileName, unsigned int bufferSize) {
   assert(pFileName);
   assert(!pDumpFile);
 
@@ -38,7 +38,7 @@ void openDump(const char *pFileName, unsigned int bufferSize) {
     return;
   }
 
-  pBuf = (unsigned int *)malloc(sizeof(unsigned int) * bufferSize);
+  pBuf = (unsigned int*)malloc(sizeof(unsigned int) * bufferSize);
   if (pBuf == NULL) {
     fprintf(stderr, "Fail to allocate memory for buffer\n");
     return;

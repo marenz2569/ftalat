@@ -30,12 +30,12 @@
 
 #include "utils.h"
 
-FILE **pMaxSetFiles = NULL;
+FILE** pMaxSetFiles = NULL;
 
 char openFreqSetterFiles() {
   unsigned int nbCore = getCoreNumber();
 
-  pMaxSetFiles = malloc(sizeof(FILE *) * nbCore);
+  pMaxSetFiles = malloc(sizeof(FILE*) * nbCore);
 
   if (pMaxSetFiles == NULL) {
     fprintf(stdout, "Fail to allocate memory for files\n");
@@ -90,14 +90,14 @@ void closeFreqSetterFiles(void) {
   }
 }
 
-char setCPUGovernor(const char *newPolicy) {
+char setCPUGovernor(const char* newPolicy) {
   int nbCore = getCoreNumber();
   int i = 0;
 
   assert(newPolicy);
 
   for (i = 0; i < nbCore; i++) {
-    FILE *pGovernorFile = openCPUFreqFile(i, "scaling_governor", "w");
+    FILE* pGovernorFile = openCPUFreqFile(i, "scaling_governor", "w");
     if (pGovernorFile != NULL) {
       fprintf(pGovernorFile, "%s", newPolicy);
 

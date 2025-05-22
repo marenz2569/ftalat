@@ -22,7 +22,7 @@
 #include <stdlib.h>
 
 /* Compute the average sample execution time */
-double average(unsigned int n, unsigned long *times) {
+double average(unsigned int n, unsigned long* times) {
   unsigned int i = 0;
   double averageTime = 0;
 
@@ -37,7 +37,7 @@ double average(unsigned int n, unsigned long *times) {
 }
 
 /* Compute the sample standard deviation */
-double sd(unsigned int n, double average, unsigned long *times) {
+double sd(unsigned int n, double average, unsigned long* times) {
   unsigned int i = 0;
   double variance = 0, sum;
 
@@ -52,9 +52,8 @@ double sd(unsigned int n, double average, unsigned long *times) {
   return variance;
 }
 
-void confidenceInterval(unsigned int n, double average, double sd,
-                        unsigned long *lowBoundTime,
-                        unsigned long *highBoundTime) {
+void confidenceInterval(unsigned int n, double average, double sd, unsigned long* lowBoundTime,
+                        unsigned long* highBoundTime) {
   // Zp for 99.9% confidence
   // float z_value = 3.291;
   // Zp for 99% confidence
@@ -82,9 +81,9 @@ void confidenceInterval(unsigned int n, double average, double sd,
   *highBoundTime = (unsigned long int)ceil(average + standardError);
 }
 
-int comparer(const void *a, const void *b) {
-  unsigned int uiA = *((unsigned int *)a);
-  unsigned int uiB = *((unsigned int *)b);
+int comparer(const void* a, const void* b) {
+  unsigned int uiA = *((unsigned int*)a);
+  unsigned int uiB = *((unsigned int*)b);
 
   if (uiA < uiB) {
     return -1;
@@ -95,9 +94,8 @@ int comparer(const void *a, const void *b) {
   return 1;
 }
 
-void interQuartileRange(unsigned int n, unsigned long *times,
-                        unsigned long *lowBoundTime,
-                        unsigned long *highBoundTime) {
+void interQuartileRange(unsigned int n, unsigned long* times, unsigned long* lowBoundTime,
+                        unsigned long* highBoundTime) {
   unsigned int minIndex, maxIndex;
 
   qsort(times, n, sizeof(unsigned long), comparer);

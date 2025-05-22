@@ -53,6 +53,6 @@ void setMinFreqForAll();
  * \param newPolicy the new governor to set
  * \return 0 is everything gone fine
  */
-char setCPUGovernor(const char *newPolicy);
+char setCPUGovernor(const char* newPolicy);
 
 #endif

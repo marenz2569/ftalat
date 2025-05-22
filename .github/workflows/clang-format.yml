@@ -1,0 +1,14 @@
+name: clang-format-review
+
+on: [push, pull_request]
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Analyze
+        run: |
+          clang-format --dry-run --Werror -style=file $(find -name '*.c' -print)
+          clang-format --dry-run --Werror -style=file $(find -name '*.h' -print)
