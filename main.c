@@ -110,12 +110,12 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   loop();
   warmup_cpuid();
 
-  char validated = 0;
   unsigned long measurements[NB_REPORT_TIMES];
   unsigned long measurements_late[NB_REPORT_TIMES];
   unsigned long long measurements_timestamps[NB_REPORT_TIMES];
 
   for (unsigned int it = 0; it < NB_REPORT_TIMES; it++) {
+    char validated = 0;
     unsigned long startLoopTime = 0;
     unsigned long lateStartLoopTime = 0;
     unsigned long endLoopTime = 0;
@@ -141,7 +141,6 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
 
       // Validation
       validated = 1;
-      times[0] = time;
       measurements[it] = endLoopTime - startLoopTime;
       measurements_late[it] = endLoopTime - lateStartLoopTime;
       measurements_timestamps[it] = endLoopTime;
