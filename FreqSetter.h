@@ -35,19 +35,18 @@ void closeFreqSetterFiles(void);
  * \param coreID the id of the core to set
  * \param targetFreq the new freq
  */
-inline void setFreq(unsigned int coreID, unsigned int targetFreq);
+void setFreq(unsigned int coreID, unsigned int targetFreq);
 
 /**
  * Set a new frequency for all cores
  * \param targetFreq the new freq
  */
-inline void setAllFreq(unsigned int targetFreq);
+void setAllFreq(unsigned int targetFreq);
 
 /**
  * Set the minimal available frequency for all cores
  */
-inline void setMinFreqForAll();
-
+void setMinFreqForAll();
 
 /**
  * Set a new cpufreq governor for all cores

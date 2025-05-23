@@ -19,18 +19,33 @@
 #ifndef CONFINTERVAL_H
 #define CONFINTERVAL_H
 
-double average(unsigned int n, unsigned long *times);
-double sd(unsigned int n, double average, unsigned long *times);
-void confidenceInterval(unsigned int n, 
-						double average, 
-						double sd, 
-						unsigned long *lowBoundTime, 
-						unsigned long *highBoundTime 
-						);
-void interQuartileRange(unsigned int n, 
-						unsigned long *times,
-						unsigned long *lowBoundTime, 
-						unsigned long *highBoundTime 
-						);
-#endif
+struct ConfidenceInterval {
+  double Average;
+  double StandardDeviation;
+  unsigned long LowerBound;
+  unsigned long UpperBound;
+  unsigned long Q1;
+  unsigned long Q3;
+};
 
+/*
+ * Build the confidence intervals from a measurement
+ * \arg Times The pointer to the measurement values
+ * \arg NbTimes The number of values in the Times pointer
+ * \arg Interval The results of the intervals
+ */
+void buildFromMeasurement(unsigned long* Times, unsigned int NbTimes, struct ConfidenceInterval* Interval);
+
+/*
+ * Dump the Confidence interval to stdout
+ */
+void dump(struct ConfidenceInterval const* const Interval, int Frequency, const char* Name);
+
+double average(unsigned int n, unsigned long* times);
+double sd(unsigned int n, double average, unsigned long* times);
+void confidenceInterval(unsigned int n, double average, double sd, unsigned long* lowBoundTime,
+                        unsigned long* highBoundTime);
+void interQuartileRange(unsigned int n, unsigned long* times, unsigned long* lowBoundTime,
+                        unsigned long* highBoundTime);
+
+#endif

@@ -18,9 +18,9 @@
 
 #include "FreqSetter.h"
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <unistd.h>
 
@@ -30,101 +30,82 @@
 
 #include "utils.h"
 
-FILE** pSetFiles = NULL;
+FILE** pMaxSetFiles = NULL;
 
-char openFreqSetterFiles()
-{
-   unsigned int nbCore = getCoreNumber();
-      
-   pSetFiles = malloc(sizeof(FILE*) * nbCore);
-   
-   if (pSetFiles == NULL)
-   {
-      fprintf(stdout,"Fail to allocate memory for files\n");
+char openFreqSetterFiles() {
+  unsigned int nbCore = getCoreNumber();
+
+  pMaxSetFiles = malloc(sizeof(FILE*) * nbCore);
+
+  if (pMaxSetFiles == NULL) {
+    fprintf(stdout, "Fail to allocate memory for files\n");
+    return -1;
+  }
+
+  unsigned int i = 0;
+  for (i = 0; i < nbCore; i++) {
+    pMaxSetFiles[i] = openCPUFreqFile(i, "scaling_max_freq", "w");
+    if (pMaxSetFiles[i] == NULL) {
       return -1;
-   }
-   
-   unsigned int i = 0;
-   for ( i = 0 ; i < nbCore ; i++ )
-   {
-      pSetFiles[i] = openCPUFreqFile(i,"scaling_setspeed","w");
-      if ( pSetFiles[i] == NULL )
-      {
-         return -1;
+    }
+  }
+
+  return 0;
+}
+
+void setFreq(unsigned int coreID, unsigned int targetFreq) {
+  assert(coreID < getCoreNumber());
+
+  fprintf(pMaxSetFiles[coreID], "%d", targetFreq);
+  fflush(pMaxSetFiles[coreID]);
+}
+
+void setAllFreq(unsigned int targetFreq) {
+  int nbCore = getCoreNumber();
+  int i;
+
+  for (i = 0; i < nbCore; i++) {
+    fprintf(pMaxSetFiles[i], "%d", targetFreq);
+    fflush(pMaxSetFiles[i]);
+  }
+}
+
+void setMinFreqForAll() {
+  setAllFreq(getMinAvailableFreq(0));
+  waitCurFreq(0, getMinAvailableFreq(0));
+}
+
+void closeFreqSetterFiles(void) {
+  int nbCore = getCoreNumber();
+  int i = 0;
+
+  if (pMaxSetFiles) {
+    for (i = 0; i < nbCore; i++) {
+      if (pMaxSetFiles[i]) {
+        fclose(pMaxSetFiles[i]);
       }
-   }
-   
-   return 0;
+    }
+
+    free(pMaxSetFiles);
+  }
 }
 
-inline void setFreq(unsigned int coreID, unsigned int targetFreq)
-{
-   assert(coreID < getCoreNumber());
-   
-   fprintf(pSetFiles[coreID],"%d",targetFreq);
-   fflush(pSetFiles[coreID]);
+char setCPUGovernor(const char* newPolicy) {
+  int nbCore = getCoreNumber();
+  int i = 0;
+
+  assert(newPolicy);
+
+  for (i = 0; i < nbCore; i++) {
+    FILE* pGovernorFile = openCPUFreqFile(i, "scaling_governor", "w");
+    if (pGovernorFile != NULL) {
+      fprintf(pGovernorFile, "%s", newPolicy);
+
+      fclose(pGovernorFile);
+    } else {
+      return -1;
+    }
+  }
+
+  return 0;
 }
-
-inline void setAllFreq(unsigned int targetFreq)
-{
-   int nbCore = getCoreNumber();
-   int i;
-   
-   for (i = 0; i < nbCore ; i++ )
-   {
-      fprintf(pSetFiles[i],"%d",targetFreq);
-      fflush(pSetFiles[i]);
-   }
-}
-
-inline void setMinFreqForAll()
-{
-   setAllFreq(getMinAvailableFreq(0));
-   waitCurFreq(0,getMinAvailableFreq(0));
-}
-
-
-void closeFreqSetterFiles(void) 
-{
-   int nbCore = getCoreNumber();
-   int i = 0;
-   
-   if ( pSetFiles )
-   {
-      for ( i = 0 ; i < nbCore ; i++ )
-      {
-         if ( pSetFiles[i] )
-         {
-            fclose(pSetFiles[i]);
-         }
-      }
-      
-      free(pSetFiles);
-   }
-}
-
-char setCPUGovernor(const char* newPolicy)
-{
-   int nbCore = getCoreNumber();
-   int i = 0;
-   
-   assert(newPolicy);
-   
-   for ( i = 0 ; i < nbCore ; i++ )
-   {
-      FILE* pGovernorFile = openCPUFreqFile(i,"scaling_governor","w");
-      if ( pGovernorFile != NULL )
-      {
-         fprintf(pGovernorFile,"%s",newPolicy);
-      
-         fclose(pGovernorFile);
-      }
-      else
-      {
-         return -1;
-      }
-   }
-   
-   return 0;
-}
-

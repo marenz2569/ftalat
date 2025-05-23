@@ -19,13 +19,144 @@
 #ifndef LOOP_H
 #define LOOP_H
 
-#include "rdtsc.h"
-
-/**
- * Kernel of 128 add in ASM
- * The kernel time execution is measured with \a sync_rdtsc1 and \a sync_rdtsc2
- * \return the number of cycles to execute the kernel
+/*
+ * The assembler work loop. Returns the number of TSC counter cycles this loops took to execute.
  */
-__inline__ unsigned long loop();
+unsigned long loop();
+
+#define asmLoop()                                                                                                      \
+  {                                                                                                                    \
+    asm volatile("addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 "addl $1,%%eax;\n\t"                                                                                  \
+                 :                                                                                                     \
+                 :                                                                                                     \
+                 : "%eax");                                                                                            \
+  }
 
 #endif
