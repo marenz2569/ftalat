@@ -21,6 +21,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "ConfInterval.h"
+
+void buildFromMeasurement(unsigned long* Times, unsigned int NbTimes, struct ConfidenceInterval* Interval) {
+  Interval->Average = average(NbTimes, Times);
+  Interval->StandardDeviation = sd(NbTimes, Interval->Average, Times);
+
+  // Build the confidence interval for the target frequency
+  confidenceInterval(NbTimes, Interval->Average, Interval->StandardDeviation, &Interval->LowerBound,
+                     &Interval->UpperBound);
+  // Build the inter-quartile range for the target frequency
+  interQuartileRange(NbTimes, Times, &Interval->Q1, &Interval->Q3);
+}
+
+void dump(struct ConfidenceInterval const* const Interval, int Frequency, const char* Name) {
+  fprintf(stdout, "# Loop @ %s frequency %dHz took %.2f cycles\n", Name, Frequency, Interval->Average);
+  fprintf(stdout, "# Interval [%lu ; %lu]\n", Interval->LowerBound, Interval->UpperBound);
+  fprintf(stdout, "# Q1 : %lu ; Q3 : %lu\n", Interval->Q1, Interval->Q3);
+}
+
 /* Compute the average sample execution time */
 double average(unsigned int n, unsigned long* times) {
   unsigned int i = 0;

@@ -23,7 +23,6 @@
 #include <sched.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -44,13 +43,7 @@
 #define NB_VALIDATION_REPET 100
 #define NB_TRY_REPET_LOOP 1000000
 
-const float DIFF_OFFSET_PERCENTAGE = 25.0f;
-
 unsigned long times[NB_BENCH_META_REPET];
-
-unsigned long measurements[NB_REPORT_TIMES];
-unsigned long measurements_late[NB_REPORT_TIMES];
-unsigned long long measurements_timestamps[NB_REPORT_TIMES];
 
 void usage() {
   fprintf(stdout, "./ftalat [-c coreID] startFreq targetFreq\n");
@@ -68,65 +61,42 @@ inline void wait(unsigned long time_in_us) {
   } while (after_time - before_time < time_in_us);
 }
 
-double measureLoop(unsigned int nbMetaRepet) {
+void measureLoop(unsigned int nbMetaRepet) {
   for (unsigned int i = 0; i < nbMetaRepet; i++) {
     times[i] = loop();
+#ifdef _DUMP
+    writeDump(times[i]);
+#endif
   }
-
-  return average(nbMetaRepet, times);
 }
 
 void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreID) {
-  double startBenchTime = 0;
-  double targetBenchTime = 0;
-  unsigned long lowBoundTime = 0;
-  unsigned long highBoundTime = 0;
-  unsigned long time = 0;
+  struct ConfidenceInterval TargetInterval, StartInterval;
 
-  unsigned long startLoopTime = 0;
-  unsigned long lateStartLoopTime = 0;
-  unsigned long endLoopTime = 0;
+  {
+    setFreq(coreID, targetFreq);
+    waitCurFreq(coreID, targetFreq);
+    measureLoop(NB_BENCH_META_REPET);
+    buildFromMeasurement(times, NB_BENCH_META_REPET, &TargetInterval);
+  }
 
-  /* Build the confidence interval of the sample mean */
-  double startBenchSD = 0;
-  double targetBenchSD = 0;
-  unsigned long startLowBoundTime = 0;
-  unsigned long startHighBoundTime = 0;
-  unsigned long targetLowBoundTime = 0;
-  unsigned long targetHighBoundTime = 0;
-  unsigned long targetQ1 = 0;
-  unsigned long targetQ3 = 0;
+  {
+    setFreq(coreID, startFreq);
+    waitCurFreq(coreID, startFreq);
+    measureLoop(NB_BENCH_META_REPET);
+    buildFromMeasurement(times, NB_BENCH_META_REPET, &StartInterval);
+  }
 
-  setFreq(coreID, targetFreq);
-  waitCurFreq(coreID, targetFreq);
-  targetBenchTime = measureLoop(NB_BENCH_META_REPET);
-  targetBenchSD = sd(NB_BENCH_META_REPET, targetBenchTime, times);
-
-  // Build the confidence interval for the target frequency
-  confidenceInterval(NB_BENCH_META_REPET, targetBenchTime, targetBenchSD, &targetLowBoundTime, &targetHighBoundTime);
-  // Build the inter-quartile range for the target frequency
-  interQuartileRange(NB_BENCH_META_REPET, times, &targetQ1, &targetQ3);
-
-  setFreq(coreID, startFreq);
-  waitCurFreq(coreID, startFreq);
-  startBenchTime = measureLoop(NB_BENCH_META_REPET);
-  startBenchSD = sd(NB_BENCH_META_REPET, startBenchTime, times);
-  // Build the confidence interval for the start frequency
-  confidenceInterval(NB_BENCH_META_REPET, startBenchTime, startBenchSD, &startLowBoundTime, &startHighBoundTime);
-
-  fprintf(stdout, "# Loop @ Start frequency %dHz took %.2f cycles\n", startFreq, startBenchTime);
-  fprintf(stdout, "# Loop @ Target frequency %dHz took %.2f cycles\n", targetFreq, targetBenchTime);
-  fprintf(stdout, "# startLowbound : %lu ; startHighbound : %lu\n", startLowBoundTime, startHighBoundTime);
-  fprintf(stdout, "# targetLowbound : %lu ; targetHighbound : %lu\n", targetLowBoundTime, targetHighBoundTime);
-  fprintf(stdout, "# targetQ1 : %lu ; targetQ3 : %lu\n", targetQ1, targetQ3);
+  dump(&StartInterval, startFreq, "Start");
+  dump(&TargetInterval, targetFreq, "Target");
 
   // Check if the confidence intervals overlap
-  if (startLowBoundTime >= targetHighBoundTime || targetLowBoundTime >= startHighBoundTime) {
+  if (StartInterval.LowerBound >= TargetInterval.UpperBound || TargetInterval.LowerBound >= StartInterval.UpperBound) {
     fprintf(stdout, "# Confidence intervals do not overlap, alternatives are "
                     "statistically different with selected confidence level\n");
-  } else if (startLowBoundTime < targetHighBoundTime || targetLowBoundTime > startHighBoundTime) {
-    if ((startBenchTime >= targetLowBoundTime && startBenchTime <= targetHighBoundTime) ||
-        (targetBenchTime >= startLowBoundTime && targetBenchTime <= startHighBoundTime)) {
+  } else {
+    if ((StartInterval.Average >= TargetInterval.LowerBound && StartInterval.Average <= TargetInterval.UpperBound) ||
+        (TargetInterval.Average >= StartInterval.LowerBound && TargetInterval.Average <= StartInterval.UpperBound)) {
       fprintf(stdout, "# Warning: confidence intervals overlap considerably, "
                       "alternatives are equal with selected confidence level\n");
       return;
@@ -136,34 +106,28 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
     }
   }
 
-  // Now we use the inter-quartile range
-  lowBoundTime = targetQ1;
-  highBoundTime = targetQ3;
-
   sync();
   loop();
   warmup_cpuid();
 
-  {
-    unsigned int i = 0;
-    unsigned int it = 0;
-    unsigned int niters = 0;
-    char validated = 0;
-    double validateBenchTime = 0;
-    double validateBenchSD = 0;
-    unsigned long validateLowBoundTime = 0;
-    unsigned long validateHighBoundTime = 0;
+  char validated = 0;
+  unsigned long measurements[NB_REPORT_TIMES];
+  unsigned long measurements_late[NB_REPORT_TIMES];
+  unsigned long long measurements_timestamps[NB_REPORT_TIMES];
 
-    for (it = 0; it < NB_REPORT_TIMES; it++) {
-      startLoopTime = 0;
-      lateStartLoopTime = 0;
-      endLoopTime = 0;
-      niters = 0;
+  for (unsigned int it = 0; it < NB_REPORT_TIMES; it++) {
+    unsigned long startLoopTime = 0;
+    unsigned long lateStartLoopTime = 0;
+    unsigned long endLoopTime = 0;
+    unsigned int niters = 0;
+    unsigned long time = 0;
 
 #ifdef _DUMP
-      resetDump();
+    resetDump();
 #endif
 
+    // Switch frequency to target and wait for the loop timing to be inside the interquartile band
+    {
       sync_rdtsc1(startLoopTime);
       setFreq(coreID, targetFreq);
       sync_rdtsc1(lateStartLoopTime);
@@ -172,8 +136,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
 #ifdef _DUMP
         writeDump(time);
 #endif
-      } while ((time < lowBoundTime || time > highBoundTime) && ++niters < NB_TRY_REPET_LOOP);
-
+      } while ((time < TargetInterval.Q1 || time > TargetInterval.Q3) && ++niters < NB_TRY_REPET_LOOP);
       sync_rdtsc2(endLoopTime);
 
       // Validation
@@ -182,76 +145,60 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       measurements[it] = endLoopTime - startLoopTime;
       measurements_late[it] = endLoopTime - lateStartLoopTime;
       measurements_timestamps[it] = endLoopTime;
+    }
 
-      for (i = 1; i < NB_VALIDATION_REPET; i++) {
-        times[i] = loop();
-#ifdef _DUMP
-        writeDump(times[i]);
-#endif
-      }
-      // Build a confidence interval for the new time value
-      validateBenchTime = average(NB_VALIDATION_REPET, times);
-      validateBenchSD = sd(NB_VALIDATION_REPET, validateBenchTime, times);
-      confidenceInterval(NB_VALIDATION_REPET, validateBenchTime, validateBenchSD, &validateLowBoundTime,
-                         &validateHighBoundTime);
+    // Validate the frequency switch
+    {
+      struct ConfidenceInterval TargetValidationInterval;
 
-      if (validateHighBoundTime < targetLowBoundTime || validateLowBoundTime > targetHighBoundTime) {
+      measureLoop(NB_VALIDATION_REPET);
+      buildFromMeasurement(times, NB_VALIDATION_REPET, &TargetValidationInterval);
+
+      // check if TargetValidationInterval and TargetInterval do not overlap
+      if (TargetValidationInterval.UpperBound <= TargetInterval.LowerBound ||
+          TargetValidationInterval.LowerBound >= TargetInterval.UpperBound) {
         validated = 0;
       }
+    }
+
+    // Switch frequency to start and wait for the loop timing to be inside the interquartile band
+    {
       setFreq(coreID, startFreq);
       do {
         time = loop();
-      } while ((time < (startLowBoundTime * .95) || time > (startHighBoundTime * 1.05)));
-      //         waitCurFreq(coreID,startFreq);
+      } while ((time < StartInterval.Q1 || time > StartInterval.Q3));
+    }
 
-      for (i = 1; i < NB_VALIDATION_REPET; i++) {
-        times[i] = loop();
-#ifdef _DUMP
-        writeDump(times[i]);
-#endif
-      }
-      // Build a confidence interval for the new time value
-      validateBenchTime = average(NB_VALIDATION_REPET, times);
-      validateBenchSD = sd(NB_VALIDATION_REPET, validateBenchTime, times);
-      confidenceInterval(NB_VALIDATION_REPET, validateBenchTime, validateBenchSD, &validateLowBoundTime,
-                         &validateHighBoundTime);
+    // Validate the frequency switch
+    {
+      struct ConfidenceInterval StartValidationInterval;
 
-      if (validateHighBoundTime < startLowBoundTime || validateLowBoundTime > startHighBoundTime) {
+      measureLoop(NB_VALIDATION_REPET);
+      buildFromMeasurement(times, NB_VALIDATION_REPET, &StartValidationInterval);
+
+      // check if StartValidationInterval and StartInterval do not overlap
+      if (StartValidationInterval.UpperBound <= StartInterval.LowerBound ||
+          StartValidationInterval.LowerBound >= StartInterval.UpperBound) {
         validated = 0;
       }
+    }
 
-      wait(NB_WAIT_US);
+    // Wait some time
+    wait(NB_WAIT_US);
 
-      if (validated == 0) {
-        measurements[it] = 0;
-        measurements_late[it] = 0;
-        if (it > 0)
-          measurements_timestamps[it] = measurements_timestamps[it - 1];
-      }
-// fprintf(stderr,".");
-#if NB_REPORT_TIMES == 1
-      fprintf(stdout, "Number of iterations to solution : %d ;  Number of attempts : %d\n", niters, j + 1);
-      if (j >= NB_TRY_REPET || validated == 0)
-        fprintf(stdout, "Warning: The computed change time may not be accurate\n");
-
-      fprintf(stdout, "LastTime : %lu ; validateLowbound : %lu ; validateHighbound : %lu\n", time, validateLowBoundTime,
-              validateHighBoundTime);
-#endif
+    if (validated == 0) {
+      measurements[it] = 0;
+      measurements_late[it] = 0;
+      if (it > 0)
+        measurements_timestamps[it] = measurements_timestamps[it - 1];
     }
   }
 
-#if NB_REPORT_TIMES == 1
-  fprintf(stdout, "Change time (with write) : %lu\n", endLoopTime - startLoopTime);
-  fprintf(stdout, "Change time : %lu\n", endLoopTime - lateStartLoopTime);
-  fprintf(stdout, "Write cost : : %lu\n", lateStartLoopTime - startLoopTime);
-#else
-  int i = 0;
-  fprintf(stdout, "time-long\tabs. time\ttime-short\n");
-  for (i = 0; i < NB_REPORT_TIMES; i++) {
-    fprintf(stdout, "%lu\t%llu\t%lu\n", measurements[i], measurements_timestamps[i] - measurements_timestamps[0],
-            measurements_late[i]);
+  fprintf(stdout, "Change time (with write)\tabs. time\tChange time\tWrite cost\n");
+  for (unsigned int i = 0; i < NB_REPORT_TIMES; i++) {
+    fprintf(stdout, "%lu\t%llu\t%lu\t%lu\n", measurements[i], measurements_timestamps[i] - measurements_timestamps[0],
+            measurements_late[i], measurements[i] - measurements_late[i]);
   }
-#endif
 }
 
 void cleanup() {
