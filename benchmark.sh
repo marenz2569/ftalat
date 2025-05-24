@@ -22,13 +22,11 @@ do
 	for TARGET in $FREQUENCIES
 	do
 		if [ $START -eq $TARGET ] 
-	    then
-        	echo "Skip $START -> $TARGET (same frequency)"
-	    	continue
-        fi
-
+		then
+			echo "Skip $START -> $TARGET (same frequency)"
+			continue
+		fi
 		echo "Running $START -> $TARGET"
-
-        sudo ./ftalat $START $TARGET > results/${START}_${TARGET}-out_random_10000us_10000sa.txt
+		sudo ./ftalat $START $TARGET > results/${START}_${TARGET}-out_random_10000us_10000sa.txt
 	done
 done
