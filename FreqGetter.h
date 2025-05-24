@@ -26,52 +26,11 @@
 unsigned int getCoreNumber();
 
 /**
- * Read the frequencies available for each cores
- */
-void initFreqInfo();
-
-/**
- */
-void freeFreqInfo();
-
-/**
- * Get the current frequency for core identified by \a coreID
- * \param coreID core identifier
- * \return the frequency actually set
- */
-unsigned int getCurFreq(unsigned int coreID);
-
-/**
  * Wait the core identified by \a coreID to be at \a targetFreq frequency
  * \param coreID core identifier
  * \param targetFreq
  */
 void waitCurFreq(unsigned int coreID, unsigned int targetFreq);
-
-/**
- * Get the minimum frequency available for the core identified by \a coreID
- * \param coreID core identifier
- * \return
- */
-unsigned int getMinAvailableFreq(unsigned int coreID);
-
-/**
- * Get the maximum frequency available for the core identified by \a coreID
- * \param coreID core identifier
- * \return
- */
-unsigned int getMaxAvailableFreq(unsigned int coreID);
-
-/**
- * \return 1 the freq is available for this core, 0 if not
- */
-int isFreqAvailable(unsigned int coreID, unsigned int freq);
-
-/**
- * Debug function to nicely print available frequencies for the core
- * identified by \a coreID
- */
-void displayAvailableFreqs(unsigned int coreID);
 
 /**
  * Get current usec in UNIX time

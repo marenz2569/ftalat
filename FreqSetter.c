@@ -16,18 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "FreqSetter.h"
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <unistd.h>
 
-#include "rdtsc.h"
-
 #include "FreqGetter.h"
-
+#include "FreqSetter.h"
 #include "utils.h"
 
 FILE** pMaxSetFiles = NULL;
@@ -60,21 +55,6 @@ void setFreq(unsigned int coreID, unsigned int targetFreq) {
   fflush(pMaxSetFiles[coreID]);
 }
 
-void setAllFreq(unsigned int targetFreq) {
-  int nbCore = getCoreNumber();
-  int i;
-
-  for (i = 0; i < nbCore; i++) {
-    fprintf(pMaxSetFiles[i], "%d", targetFreq);
-    fflush(pMaxSetFiles[i]);
-  }
-}
-
-void setMinFreqForAll() {
-  setAllFreq(getMinAvailableFreq(0));
-  waitCurFreq(0, getMinAvailableFreq(0));
-}
-
 void closeFreqSetterFiles(void) {
   int nbCore = getCoreNumber();
   int i = 0;
@@ -88,24 +68,4 @@ void closeFreqSetterFiles(void) {
 
     free(pMaxSetFiles);
   }
-}
-
-char setCPUGovernor(const char* newPolicy) {
-  int nbCore = getCoreNumber();
-  int i = 0;
-
-  assert(newPolicy);
-
-  for (i = 0; i < nbCore; i++) {
-    FILE* pGovernorFile = openCPUFreqFile(i, "scaling_governor", "w");
-    if (pGovernorFile != NULL) {
-      fprintf(pGovernorFile, "%s", newPolicy);
-
-      fclose(pGovernorFile);
-    } else {
-      return -1;
-    }
-  }
-
-  return 0;
 }

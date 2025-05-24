@@ -40,6 +40,21 @@ void dump(struct ConfidenceInterval const* const Interval, int Frequency, const 
   fprintf(stdout, "# Q1 : %lu ; Q3 : %lu\n", Interval->Q1, Interval->Q3);
 }
 
+bool overlap(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs) {
+  return Lhs->LowerBound < Rhs->UpperBound || Rhs->LowerBound < Lhs->UpperBound;
+}
+
+bool overlapSignificantly(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs) {
+  return (Lhs->Average >= Rhs->LowerBound && Lhs->Average <= Rhs->UpperBound) ||
+         (Rhs->Average >= Lhs->LowerBound && Rhs->Average <= Lhs->UpperBound);
+}
+
+bool overlapSignificantlyQ1Q3(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs) {
+  unsigned long LhsQ1Q3 = (Lhs->Q1 + Lhs->Q3) / 2;
+  unsigned long RhsQ1Q3 = (Rhs->Q1 + Rhs->Q3) / 2;
+  return (LhsQ1Q3 >= Rhs->Q1 && LhsQ1Q3 <= Rhs->Q3) || (RhsQ1Q3 >= Lhs->Q1 && RhsQ1Q3 <= Lhs->Q3);
+}
+
 /* Compute the average sample execution time */
 double average(unsigned int n, unsigned long* times) {
   unsigned int i = 0;
@@ -47,7 +62,6 @@ double average(unsigned int n, unsigned long* times) {
 
   for (i = 0; i < n; i++) {
     averageTime += times[i];
-    ;
   }
 
   averageTime /= n;

@@ -39,7 +39,7 @@
 
 #include "ConfInterval.h"
 
-#define NB_BENCH_META_REPET 10000
+#define NB_BENCH_META_REPET 100000
 #define NB_VALIDATION_REPET 100
 #define NB_TRY_REPET_LOOP 1000000
 
@@ -51,9 +51,6 @@ void usage() {
 }
 
 inline void wait(unsigned long time_in_us) {
-#ifdef NB_WAIT_RANDOM
-  time_in_us = xorshf96() % time_in_us;
-#endif
   unsigned long long before_time, after_time;
   before_time = getusec();
   do {
@@ -76,6 +73,8 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   {
     setFreq(coreID, targetFreq);
     waitCurFreq(coreID, targetFreq);
+    // Wait 10ms for settling of the frequency
+    wait(10000);
     measureLoop(NB_BENCH_META_REPET);
     buildFromMeasurement(times, NB_BENCH_META_REPET, &TargetInterval);
   }
@@ -83,6 +82,8 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   {
     setFreq(coreID, startFreq);
     waitCurFreq(coreID, startFreq);
+    // Wait 10ms for settling of the frequency
+    wait(10000);
     measureLoop(NB_BENCH_META_REPET);
     buildFromMeasurement(times, NB_BENCH_META_REPET, &StartInterval);
   }
@@ -91,19 +92,16 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   dump(&TargetInterval, targetFreq, "Target");
 
   // Check if the confidence intervals overlap
-  if (StartInterval.LowerBound >= TargetInterval.UpperBound || TargetInterval.LowerBound >= StartInterval.UpperBound) {
+  if (overlapSignificantly(&StartInterval, &TargetInterval)) {
+    fprintf(stdout, "# Warning: confidence intervals overlap considerably, "
+                    "alternatives are equal with selected confidence level\n");
+    return;
+  } else if (overlap(&StartInterval, &TargetInterval)) {
+    fprintf(stdout, "# Warning: confidence intervals overlap, we can not "
+                    "state any thing, need to do the t-test\n");
+  } else {
     fprintf(stdout, "# Confidence intervals do not overlap, alternatives are "
                     "statistically different with selected confidence level\n");
-  } else {
-    if ((StartInterval.Average >= TargetInterval.LowerBound && StartInterval.Average <= TargetInterval.UpperBound) ||
-        (TargetInterval.Average >= StartInterval.LowerBound && TargetInterval.Average <= StartInterval.UpperBound)) {
-      fprintf(stdout, "# Warning: confidence intervals overlap considerably, "
-                      "alternatives are equal with selected confidence level\n");
-      return;
-    } else {
-      fprintf(stdout, "# Warning: confidence intervals overlap, we can not "
-                      "state any thing, need to do the t-test\n");
-    }
   }
 
   sync();
@@ -113,21 +111,34 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   unsigned long measurements[NB_REPORT_TIMES];
   unsigned long measurements_late[NB_REPORT_TIMES];
   unsigned long long measurements_timestamps[NB_REPORT_TIMES];
+  unsigned long measurements_waitTime[NB_REPORT_TIMES];
 
   for (unsigned int it = 0; it < NB_REPORT_TIMES; it++) {
     char validated = 0;
-    unsigned long startLoopTime = 0;
-    unsigned long lateStartLoopTime = 0;
-    unsigned long endLoopTime = 0;
-    unsigned int niters = 0;
-    unsigned long time = 0;
+    unsigned long waitTime = 0;
 
 #ifdef _DUMP
     resetDump();
 #endif
 
+#ifdef NB_WAIT_RANDOM
+    waitTime = xorshf96() % NB_WAIT_US;
+#else
+    waitTime = NB_WAIT_US;
+#endif
+
+    // Wait some time
+    wait(waitTime);
+    measurements_waitTime[it] = waitTime;
+
     // Switch frequency to target and wait for the loop timing to be inside the interquartile band
     {
+      unsigned long startLoopTime = 0;
+      unsigned long lateStartLoopTime = 0;
+      unsigned long endLoopTime = 0;
+      unsigned int niters = 0;
+      unsigned long time = 0;
+
       sync_rdtsc1(startLoopTime);
       setFreq(coreID, targetFreq);
       sync_rdtsc1(lateStartLoopTime);
@@ -153,17 +164,15 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       measureLoop(NB_VALIDATION_REPET);
       buildFromMeasurement(times, NB_VALIDATION_REPET, &TargetValidationInterval);
 
-      // check if TargetValidationInterval and TargetInterval do not overlap considerably
-      if (!((TargetValidationInterval.Average >= TargetInterval.LowerBound &&
-             TargetValidationInterval.Average <= TargetInterval.UpperBound) ||
-            (TargetInterval.Average >= TargetValidationInterval.LowerBound &&
-             TargetInterval.Average <= TargetValidationInterval.UpperBound))) {
+      if (!overlapSignificantlyQ1Q3(&TargetInterval, &TargetValidationInterval)) {
         validated = 0;
       }
     }
 
     // Switch frequency to start and wait for the loop timing to be inside the interquartile band
     {
+      unsigned long time = 0;
+
       setFreq(coreID, startFreq);
       do {
         time = loop();
@@ -177,17 +186,10 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       measureLoop(NB_VALIDATION_REPET);
       buildFromMeasurement(times, NB_VALIDATION_REPET, &StartValidationInterval);
 
-      // check if StartValidationInterval and StartInterval do not overlap considerably
-      if (!((StartValidationInterval.Average >= StartInterval.LowerBound &&
-             StartValidationInterval.Average <= StartInterval.UpperBound) ||
-            (StartInterval.Average >= StartValidationInterval.LowerBound &&
-             StartInterval.Average <= StartValidationInterval.UpperBound))) {
+      if (!overlapSignificantlyQ1Q3(&StartInterval, &StartValidationInterval)) {
         validated = 0;
       }
     }
-
-    // Wait some time
-    wait(NB_WAIT_US);
 
     if (validated == 0) {
       measurements[it] = 0;
@@ -197,17 +199,16 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
     }
   }
 
-  fprintf(stdout, "Change time (with write)\tabs. time\tChange time\tWrite cost\n");
+  fprintf(stdout, "Change time (with write)\tabs. time\tChange time\tWrite cost\tWait time\n");
   for (unsigned int i = 0; i < NB_REPORT_TIMES; i++) {
-    fprintf(stdout, "%lu\t%llu\t%lu\t%lu\n", measurements[i], measurements_timestamps[i] - measurements_timestamps[0],
-            measurements_late[i], measurements[i] - measurements_late[i]);
+    fprintf(stdout, "%lu\t%llu\t%lu\t%lu\t%lu\n", measurements[i],
+            measurements_timestamps[i] - measurements_timestamps[0], measurements_late[i],
+            measurements[i] - measurements_late[i], measurements_waitTime[i]);
   }
 }
 
 void cleanup() {
   closeFreqSetterFiles();
-
-  freeFreqInfo();
 
 #ifdef _DUMP
   closeDump();
@@ -257,8 +258,6 @@ int main(int argc, char** argv) {
     fprintf(stdout, "Core ID is set to 0\n");
     coreID = 0;
   }
-
-  initFreqInfo();
 
 #ifdef _DUMP
   openDump("./results.dump", NB_TRY_REPET_LOOP * NB_VALIDATION_REPET);
