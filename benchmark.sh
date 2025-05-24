@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # TODO: remove this once the branch is merged
 source ~/lab_management_scripts/.venv/bin/activate
@@ -15,11 +15,11 @@ make
 rm -rf results || true
 mkdir -p results
 
-FREQUENCIES=(2000000 1900000 1800000 1700000 1600000 1500000 1400000 1300000 1200000 1100000 1000000 900000 800000)
+frequencies=(2000000 1900000 1800000 1700000 1600000 1500000 1400000 1300000 1200000 1100000 1000000 900000 800000)
 
-for START in $FREQUENCIES
+for START in "${frequencies[@]}"
 do
-	for TARGET in $FREQUENCIES
+	for TARGET in "${frequencies[@]}"
 	do
 		if [ $START -eq $TARGET ] 
 		then
