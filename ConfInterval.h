@@ -54,9 +54,9 @@ bool overlap(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterv
 bool overlapSignificantly(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs);
 
 /*
- * Check if the Q1..Q3 range of Lhs is inside the Q1..Q3 range of Rhs
+ * Check if the Q1..Q3 range of Lhs overlaps significantly with the Q1..Q3 range of Rhs.
  */
-bool isInsideQ1Q3(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs);
+bool overlapSignificantlyQ1Q3(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs);
 
 double average(unsigned int n, unsigned long* times);
 double sd(unsigned int n, double average, unsigned long* times);

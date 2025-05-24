@@ -161,7 +161,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       measureLoop(NB_VALIDATION_REPET);
       buildFromMeasurement(times, NB_VALIDATION_REPET, &TargetValidationInterval);
 
-      if (!isInsideQ1Q3(&TargetInterval, &TargetValidationInterval)) {
+      if (!overlapSignificantlyQ1Q3(&TargetInterval, &TargetValidationInterval)) {
         validated = 0;
       }
     }
@@ -181,7 +181,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       measureLoop(NB_VALIDATION_REPET);
       buildFromMeasurement(times, NB_VALIDATION_REPET, &StartValidationInterval);
 
-      if (!isInsideQ1Q3(&StartInterval, &StartValidationInterval)) {
+      if (!overlapSignificantlyQ1Q3(&StartInterval, &StartValidationInterval)) {
         validated = 0;
       }
     }

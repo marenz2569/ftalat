@@ -49,8 +49,10 @@ bool overlapSignificantly(struct ConfidenceInterval const* const Lhs, struct Con
          (Rhs->Average >= Lhs->LowerBound && Rhs->Average <= Lhs->UpperBound);
 }
 
-bool isInsideQ1Q3(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs) {
-  return Rhs->Q1 <= Lhs->Q1 && Lhs->Q3 <= Rhs->Q3;
+bool overlapSignificantlyQ1Q3(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs) {
+  unsigned long LhsQ1Q3 = (Lhs->Q1 + Lhs->Q3) / 2;
+  unsigned long RhsQ1Q3 = (Rhs->Q1 + Rhs->Q3) / 2;
+  return (LhsQ1Q3 >= Rhs->Q1 && LhsQ1Q3 <= Rhs->Q3) || (RhsQ1Q3 >= Lhs->Q1 && RhsQ1Q3 <= Lhs->Q3);
 }
 
 /* Compute the average sample execution time */
