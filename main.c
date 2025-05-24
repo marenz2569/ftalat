@@ -162,10 +162,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       buildFromMeasurement(times, NB_VALIDATION_REPET, &TargetValidationInterval);
 
       // check if TargetValidationInterval and TargetInterval do not overlap considerably
-      if (!((TargetValidationInterval.Average >= TargetInterval.LowerBound &&
-             TargetValidationInterval.Average <= TargetInterval.UpperBound) ||
-            (TargetInterval.Average >= TargetValidationInterval.LowerBound &&
-             TargetInterval.Average <= TargetValidationInterval.UpperBound))) {
+      if (!isInsideQ1Q3(&TargetValidationInterval, &TargetInterval)) {
         validated = 0;
       }
     }
@@ -186,10 +183,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       buildFromMeasurement(times, NB_VALIDATION_REPET, &StartValidationInterval);
 
       // check if StartValidationInterval and StartInterval do not overlap considerably
-      if (!((StartValidationInterval.Average >= StartInterval.LowerBound &&
-             StartValidationInterval.Average <= StartInterval.UpperBound) ||
-            (StartInterval.Average >= StartValidationInterval.LowerBound &&
-             StartInterval.Average <= StartValidationInterval.UpperBound))) {
+      if (!isInsideQ1Q3(&StartValidationInterval, &StartInterval)) {
         validated = 0;
       }
     }
