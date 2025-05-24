@@ -40,6 +40,15 @@ void dump(struct ConfidenceInterval const* const Interval, int Frequency, const 
   fprintf(stdout, "# Q1 : %lu ; Q3 : %lu\n", Interval->Q1, Interval->Q3);
 }
 
+bool overlap(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs) {
+  return Lhs->LowerBound < Rhs->UpperBound || Rhs->LowerBound < Lhs->UpperBound;
+}
+
+bool overlapSignificantly(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs) {
+  return (Lhs->Average >= Rhs->LowerBound && Lhs->Average <= Rhs->UpperBound) ||
+         (Rhs->Average >= Lhs->LowerBound && Rhs->Average <= Lhs->UpperBound);
+}
+
 /* Compute the average sample execution time */
 double average(unsigned int n, unsigned long* times) {
   unsigned int i = 0;

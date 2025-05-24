@@ -19,6 +19,8 @@
 #ifndef CONFINTERVAL_H
 #define CONFINTERVAL_H
 
+#include <stdbool.h>
+
 struct ConfidenceInterval {
   double Average;
   double StandardDeviation;
@@ -40,6 +42,16 @@ void buildFromMeasurement(unsigned long* Times, unsigned int NbTimes, struct Con
  * Dump the Confidence interval to stdout
  */
 void dump(struct ConfidenceInterval const* const Interval, int Frequency, const char* Name);
+
+/*
+ * Check if intervals overlap.
+ */
+bool overlap(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs);
+
+/*
+ * Check if intervals overlap significantly.
+ */
+bool overlapSignificantly(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs);
 
 double average(unsigned int n, unsigned long* times);
 double sd(unsigned int n, double average, unsigned long* times);

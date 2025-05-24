@@ -92,19 +92,16 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   dump(&TargetInterval, targetFreq, "Target");
 
   // Check if the confidence intervals overlap
-  if (StartInterval.LowerBound >= TargetInterval.UpperBound || TargetInterval.LowerBound >= StartInterval.UpperBound) {
+  if (overlapSignificantly(&StartInterval, &TargetInterval)) {
+    fprintf(stdout, "# Warning: confidence intervals overlap considerably, "
+                    "alternatives are equal with selected confidence level\n");
+    return;
+  } else if (overlap(&StartInterval, &TargetInterval)) {
+    fprintf(stdout, "# Warning: confidence intervals overlap, we can not "
+                    "state any thing, need to do the t-test\n");
+  } else {
     fprintf(stdout, "# Confidence intervals do not overlap, alternatives are "
                     "statistically different with selected confidence level\n");
-  } else {
-    if ((StartInterval.Average >= TargetInterval.LowerBound && StartInterval.Average <= TargetInterval.UpperBound) ||
-        (TargetInterval.Average >= StartInterval.LowerBound && TargetInterval.Average <= StartInterval.UpperBound)) {
-      fprintf(stdout, "# Warning: confidence intervals overlap considerably, "
-                      "alternatives are equal with selected confidence level\n");
-      return;
-    } else {
-      fprintf(stdout, "# Warning: confidence intervals overlap, we can not "
-                      "state any thing, need to do the t-test\n");
-    }
   }
 
   sync();
