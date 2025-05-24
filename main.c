@@ -39,7 +39,7 @@
 
 #include "ConfInterval.h"
 
-#define NB_BENCH_META_REPET 10000
+#define NB_BENCH_META_REPET 100000
 #define NB_VALIDATION_REPET 100
 #define NB_TRY_REPET_LOOP 1000000
 
@@ -51,9 +51,6 @@ void usage() {
 }
 
 inline void wait(unsigned long time_in_us) {
-#ifdef NB_WAIT_RANDOM
-  time_in_us = xorshf96() % time_in_us;
-#endif
   unsigned long long before_time, after_time;
   before_time = getusec();
   do {
@@ -76,6 +73,8 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   {
     setFreq(coreID, targetFreq);
     waitCurFreq(coreID, targetFreq);
+    // Wait 10ms for settling of the frequency
+    wait(10000);
     measureLoop(NB_BENCH_META_REPET);
     buildFromMeasurement(times, NB_BENCH_META_REPET, &TargetInterval);
   }
@@ -83,6 +82,8 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   {
     setFreq(coreID, startFreq);
     waitCurFreq(coreID, startFreq);
+    // Wait 10ms for settling of the frequency
+    wait(10000);
     measureLoop(NB_BENCH_META_REPET);
     buildFromMeasurement(times, NB_BENCH_META_REPET, &StartInterval);
   }
@@ -116,6 +117,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
 
   for (unsigned int it = 0; it < NB_REPORT_TIMES; it++) {
     char validated = 0;
+    unsigned long waitTime = 0;
     unsigned long startLoopTime = 0;
     unsigned long lateStartLoopTime = 0;
     unsigned long endLoopTime = 0;
@@ -125,6 +127,15 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
 #ifdef _DUMP
     resetDump();
 #endif
+
+#ifdef NB_WAIT_RANDOM
+    waitTime = xorshf96() % NB_WAIT_US;
+#else
+    waitTime = NB_WAIT_US;
+#endif
+
+    // Wait some time
+    wait(waitTime);
 
     // Switch frequency to target and wait for the loop timing to be inside the interquartile band
     {
@@ -185,9 +196,6 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
         validated = 0;
       }
     }
-
-    // Wait some time
-    wait(NB_WAIT_US);
 
     if (validated == 0) {
       measurements[it] = 0;
