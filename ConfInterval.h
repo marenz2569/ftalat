@@ -54,7 +54,7 @@ bool overlap(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterv
 bool overlapSignificantly(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs);
 
 /*
- * Check if the average of Lhs is inside the Q1..Q3 range of Rhs
+ * Check if the Q1..Q3 range of Lhs is inside the Q1..Q3 range of Rhs
  */
 bool isInsideQ1Q3(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs);
 
