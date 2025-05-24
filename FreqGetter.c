@@ -16,31 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "FreqGetter.h"
-
 #include <assert.h>
+#include <linux/perf_event.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include <unistd.h>
-
-#include <linux/perf_event.h>
 #include <string.h>
 #include <sys/syscall.h>
 #include <sys/time.h>
+#include <unistd.h>
 
-#include "utils.h"
-
-/**
- * \struct FreqsList
- * Keeps track of all the frequencies available for one core
- */
-typedef struct FreqsList {
-  unsigned int nbFreqs; /*!< number of frequencies available for this core */
-  unsigned int* pFreqs; /*!< the available frequencies */
-} FreqsList;
-
-FreqsList* pAvailableFreqsTable = NULL;
+#include "FreqGetter.h"
 
 unsigned int getCoreNumber() {
   static unsigned int nbCore = 0;
@@ -57,89 +42,6 @@ unsigned int getCoreNumber() {
   return nbCore;
 }
 
-void initFreqInfo() {
-  unsigned int nbCore = getCoreNumber();
-  unsigned int i = 0;
-
-  pAvailableFreqsTable = (FreqsList*)calloc(nbCore, sizeof(FreqsList));
-  if (pAvailableFreqsTable == NULL) {
-    fprintf(stderr, "Fail to allocate memory for frequency table\n");
-    return;
-  }
-
-  // Get all the frequencies available for all cores
-  for (i = 0; i < nbCore; i++) {
-    FILE* pFreqMinFile = openCPUFreqFile(i, "scaling_min_freq", "r");
-    FILE* pFreqMaxFile = openCPUFreqFile(i, "scaling_max_freq", "r");
-    if (pFreqMinFile != NULL && pFreqMaxFile != NULL) {
-      unsigned int minFreq = 0;
-      unsigned int maxFreq = 0;
-      fscanf(pFreqMinFile, "%u", &minFreq);
-      fscanf(pFreqMaxFile, "%u", &maxFreq);
-
-      size_t tabSize = 25;
-      pAvailableFreqsTable[i].pFreqs =
-          (unsigned int*)malloc(sizeof(unsigned int) * tabSize); // let's say 25 is enough for an init size
-      if (pAvailableFreqsTable[i].pFreqs != NULL) {
-        size_t counter = 0;
-        // Loop in 100000 kHz steps over the frequencies.
-        for (unsigned int freq = minFreq; freq <= maxFreq; freq += 100000) {
-          pAvailableFreqsTable[i].pFreqs[counter] = freq;
-          counter++;
-          if (counter >= tabSize) // Not enough space remaining
-          {
-            // Double size
-            tabSize *= 2;
-            unsigned int* newFreqsTab = realloc(pAvailableFreqsTable[i].pFreqs, tabSize * sizeof(unsigned int));
-            if (newFreqsTab != NULL) {
-              pAvailableFreqsTable[i].pFreqs = newFreqsTab;
-            } else {
-              fprintf(stderr, "Fail to allocate more memory for frequency table\n");
-              break;
-            }
-          }
-        }
-
-        pAvailableFreqsTable[i].nbFreqs = counter;
-      } else {
-        fprintf(stderr, "Fail to allocated memory for line of frequency table\n");
-      }
-
-      fclose(pFreqMinFile);
-      fclose(pFreqMaxFile);
-    } else {
-      pAvailableFreqsTable[i].nbFreqs = 0;
-      pAvailableFreqsTable[i].pFreqs = NULL;
-    }
-  }
-}
-
-void freeFreqInfo() {
-  unsigned int nbCore = getCoreNumber();
-  unsigned int i = 0;
-
-  for (i = 0; i < nbCore; i++) {
-    free(pAvailableFreqsTable[i].pFreqs);
-  }
-
-  free(pAvailableFreqsTable);
-}
-
-unsigned int getCurFreq(unsigned int coreID) {
-  assert(coreID < getCoreNumber());
-
-  unsigned int freq = 0;
-
-  FILE* pFreqFile = openCPUFreqFile(coreID, "scaling_cur_freq", "r");
-  if (pFreqFile != NULL) {
-    fscanf(pFreqFile, "%u", &freq);
-
-    fclose(pFreqFile);
-  }
-
-  return freq;
-}
-
 unsigned long long get_cycles(int fd) {
   unsigned long long result;
   size_t res = read(fd, &result, sizeof(unsigned long long));
@@ -147,6 +49,7 @@ unsigned long long get_cycles(int fd) {
     return !(0ULL);
   return result;
 }
+
 unsigned long long getusec() {
   struct timeval tv;
   gettimeofday(&tv, NULL);
@@ -187,53 +90,5 @@ void waitCurFreq(unsigned int coreID, unsigned int targetFreq) {
       break;
     else if ((nr % 1000) == 900)
       printf("Target: %u, measured: %u\n", targetFreq, measuredFreq);
-  }
-}
-
-unsigned int getMinAvailableFreq(unsigned int coreID) {
-  assert(coreID < getCoreNumber());
-
-  if (pAvailableFreqsTable[coreID].pFreqs) {
-    return pAvailableFreqsTable[coreID].pFreqs[pAvailableFreqsTable[coreID].nbFreqs - 1];
-  }
-
-  return 0;
-}
-
-unsigned int getMaxAvailableFreq(unsigned int coreID) {
-  assert(coreID < getCoreNumber());
-
-  if (pAvailableFreqsTable[coreID].pFreqs) {
-    return pAvailableFreqsTable[coreID].pFreqs[0];
-  }
-
-  return 0;
-}
-
-int isFreqAvailable(unsigned int coreID, unsigned int freq) {
-  assert(coreID < getCoreNumber());
-
-  unsigned int i = 0;
-  if (pAvailableFreqsTable[coreID].pFreqs) {
-    for (i = 0; i < pAvailableFreqsTable[coreID].nbFreqs; i++) {
-      if (pAvailableFreqsTable[coreID].pFreqs[i] == freq) {
-        return 1;
-      }
-    }
-  }
-
-  return 0;
-}
-
-void displayAvailableFreqs(unsigned int coreID) {
-  assert(coreID < getCoreNumber());
-
-  unsigned int i = 0;
-  if (pAvailableFreqsTable[coreID].pFreqs) {
-    fprintf(stdout, "Frequencies for core %u : ", coreID);
-    for (i = 0; i < pAvailableFreqsTable[coreID].nbFreqs; i++) {
-      fprintf(stdout, "%u ", pAvailableFreqsTable[coreID].pFreqs[i]);
-    }
-    fprintf(stdout, "\n");
   }
 }

@@ -47,7 +47,6 @@ double average(unsigned int n, unsigned long* times) {
 
   for (i = 0; i < n; i++) {
     averageTime += times[i];
-    ;
   }
 
   averageTime /= n;

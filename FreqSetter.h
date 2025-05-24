@@ -43,16 +43,4 @@ void setFreq(unsigned int coreID, unsigned int targetFreq);
  */
 void setAllFreq(unsigned int targetFreq);
 
-/**
- * Set the minimal available frequency for all cores
- */
-void setMinFreqForAll();
-
-/**
- * Set a new cpufreq governor for all cores
- * \param newPolicy the new governor to set
- * \return 0 is everything gone fine
- */
-char setCPUGovernor(const char* newPolicy);
-
 #endif

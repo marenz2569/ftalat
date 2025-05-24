@@ -207,8 +207,6 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
 void cleanup() {
   closeFreqSetterFiles();
 
-  freeFreqInfo();
-
 #ifdef _DUMP
   closeDump();
 #endif
@@ -257,8 +255,6 @@ int main(int argc, char** argv) {
     fprintf(stdout, "Core ID is set to 0\n");
     coreID = 0;
   }
-
-  initFreqInfo();
 
 #ifdef _DUMP
   openDump("./results.dump", NB_TRY_REPET_LOOP * NB_VALIDATION_REPET);
