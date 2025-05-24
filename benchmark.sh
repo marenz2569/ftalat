@@ -1,11 +1,11 @@
 #!/bin/bash
 
- # TODO: remove this once the branch is merged
- source ~/lab_management_scripts/.venv/bin/activate
- elab ht enable
- elab frequency 800
- elab cstate enable --only POLL
- elab ht disable
+# TODO: remove this once the branch is merged
+source ~/lab_management_scripts/.venv/bin/activate
+elab ht enable
+elab frequency 800
+elab cstate enable --only POLL
+elab ht disable
 
 # measurement for long
 make clean
