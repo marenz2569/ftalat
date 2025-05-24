@@ -111,15 +111,11 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   unsigned long measurements[NB_REPORT_TIMES];
   unsigned long measurements_late[NB_REPORT_TIMES];
   unsigned long long measurements_timestamps[NB_REPORT_TIMES];
+  unsigned long measurements_waitTime[NB_REPORT_TIMES];
 
   for (unsigned int it = 0; it < NB_REPORT_TIMES; it++) {
     char validated = 0;
     unsigned long waitTime = 0;
-    unsigned long startLoopTime = 0;
-    unsigned long lateStartLoopTime = 0;
-    unsigned long endLoopTime = 0;
-    unsigned int niters = 0;
-    unsigned long time = 0;
 
 #ifdef _DUMP
     resetDump();
@@ -133,9 +129,16 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
 
     // Wait some time
     wait(waitTime);
+    measurements_waitTime[it] = waitTime;
 
     // Switch frequency to target and wait for the loop timing to be inside the interquartile band
     {
+      unsigned long startLoopTime = 0;
+      unsigned long lateStartLoopTime = 0;
+      unsigned long endLoopTime = 0;
+      unsigned int niters = 0;
+      unsigned long time = 0;
+
       sync_rdtsc1(startLoopTime);
       setFreq(coreID, targetFreq);
       sync_rdtsc1(lateStartLoopTime);
@@ -168,6 +171,8 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
 
     // Switch frequency to start and wait for the loop timing to be inside the interquartile band
     {
+      unsigned long time = 0;
+
       setFreq(coreID, startFreq);
       do {
         time = loop();
@@ -194,10 +199,11 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
     }
   }
 
-  fprintf(stdout, "Change time (with write)\tabs. time\tChange time\tWrite cost\n");
+  fprintf(stdout, "Change time (with write)\tabs. time\tChange time\tWrite cost\tWait time\n");
   for (unsigned int i = 0; i < NB_REPORT_TIMES; i++) {
-    fprintf(stdout, "%lu\t%llu\t%lu\t%lu\n", measurements[i], measurements_timestamps[i] - measurements_timestamps[0],
-            measurements_late[i], measurements[i] - measurements_late[i]);
+    fprintf(stdout, "%lu\t%llu\t%lu\t%lu\t%lu\n", measurements[i],
+            measurements_timestamps[i] - measurements_timestamps[0], measurements_late[i],
+            measurements[i] - measurements_late[i], measurements_waitTime[i]);
   }
 }
 
