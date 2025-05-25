@@ -114,7 +114,6 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
 
   unsigned long measurements[NB_REPORT_TIMES];
   unsigned long measurements_late[NB_REPORT_TIMES];
-  unsigned long long measurements_timestamps[NB_REPORT_TIMES];
   unsigned long measurements_waitTime[NB_REPORT_TIMES];
 
   for (unsigned int it = 0; it < NB_REPORT_TIMES; it++) {
@@ -158,7 +157,6 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       validated = 1;
       measurements[it] = endLoopTime - startLoopTime;
       measurements_late[it] = endLoopTime - lateStartLoopTime;
-      measurements_timestamps[it] = endLoopTime;
     }
 
     // Validate the frequency switch
@@ -199,15 +197,12 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
     if (validated == 0) {
       measurements[it] = 0;
       measurements_late[it] = 0;
-      if (it > 0)
-        measurements_timestamps[it] = measurements_timestamps[it - 1];
     }
   }
 
   fprintf(stdout, "Change time (with write)\tabs. time\tChange time\tWrite cost\tWait time\n");
   for (unsigned int i = 0; i < NB_REPORT_TIMES; i++) {
-    fprintf(stdout, "%lu\t%llu\t%lu\t%lu\t%lu\n", measurements[i],
-            measurements_timestamps[i] - measurements_timestamps[0], measurements_late[i],
+    fprintf(stdout, "%lu\t%lu\t%lu\t%lu\n", measurements[i], measurements_late[i],
             measurements[i] - measurements_late[i], measurements_waitTime[i]);
   }
 }
