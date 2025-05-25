@@ -30,6 +30,7 @@ This step is repeated to switch back to the start frequency.
 | `NB_WAIT_RANDOM` | Flag that sets a random wait delay between 0 and `NB_WAIT_US`. |
 | `NB_WAIT_US` | The time to wait between frequency switches. |
 | `NB_REPORT_TIMES` | The number of benchmark repetitions. |
+| `FREQ_SETTER_FILE` | The file in sysfs that is used to write to frequency. Should be either `scaling_max_freq` or `scaling_setspeed`. |
 
 ## Output format
 The output of the benchmark is given as tab-seperated values with file starting with `#` as comments.

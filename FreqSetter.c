@@ -25,6 +25,8 @@
 #include "FreqSetter.h"
 #include "utils.h"
 
+#define FREQ_SETTER_FILE "scaling_max_freq"
+
 FILE** pMaxSetFiles = NULL;
 
 char openFreqSetterFiles() {
@@ -39,7 +41,7 @@ char openFreqSetterFiles() {
 
   unsigned int i = 0;
   for (i = 0; i < nbCore; i++) {
-    pMaxSetFiles[i] = openCPUFreqFile(i, "scaling_max_freq", "w");
+    pMaxSetFiles[i] = openCPUFreqFile(i, FREQ_SETTER_FILE, "w");
     if (pMaxSetFiles[i] == NULL) {
       return -1;
     }
