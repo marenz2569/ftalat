@@ -25,8 +25,6 @@
 #include "FreqSetter.h"
 #include "utils.h"
 
-#define FREQ_SETTER_FILE "scaling_max_freq"
-
 FILE** pMaxSetFiles = NULL;
 
 char openFreqSetterFiles() {
