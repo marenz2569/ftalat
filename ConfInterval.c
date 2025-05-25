@@ -41,7 +41,8 @@ void dump(struct ConfidenceInterval const* const Interval, int Frequency, const 
 }
 
 bool overlap(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs) {
-  return Lhs->LowerBound < Rhs->UpperBound || Rhs->LowerBound < Lhs->UpperBound;
+  return (Lhs->LowerBound < Rhs->LowerBound && Rhs->LowerBound < Lhs->UpperBound) ||
+         (Lhs->LowerBound < Rhs->UpperBound && Rhs->UpperBound < Lhs->UpperBound);
 }
 
 bool overlapSignificantly(struct ConfidenceInterval const* const Lhs, struct ConfidenceInterval const* const Rhs) {
