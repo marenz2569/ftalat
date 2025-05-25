@@ -34,7 +34,7 @@ echo "Running ftalat for following frequencies:"
 printf '%s ' "${frequencies[@]}"
 
 # Disable cstates
-cat 1 | sudo tee /sys/devices/system/cpu/cpu*/cpuidle/state*/disable
+echo 1 | sudo tee /sys/devices/system/cpu/cpu*/cpuidle/state*/disable
 
 # Take hyperthreads offline
 echo off | sudo tee /sys/devices/system/cpu/smt/control
@@ -65,13 +65,13 @@ done
 echo on | sudo tee /sys/devices/system/cpu/smt/control
 
 # set cpu frequency back to normal
-if [ $scaling_available_frequencies_found -eq 1 ]
+if [ $scaling_available_frequencies_found -ne 0 ]
 then
 	cat $max_frequency | sudo tee /sys/bus/cpu/devices/cpu*/cpufreq/scaling_max_freq
 fi
 
 # Enable cstates
-cat 0 | sudo tee /sys/devices/system/cpu/cpu*/cpuidle/state*/disable
+echo 0 | sudo tee /sys/devices/system/cpu/cpu*/cpuidle/state*/disable
 
 # Set green governor
 echo powersave | sudo tee /sys/bus/cpu/devices/cpu*/cpufreq/scaling_governor
