@@ -83,8 +83,8 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   unsigned long lastFrequencyChangeTime = 0;
 
   {
-    setFreq(coreID, startFreq);
     sync_rdtsc1(lastFrequencyChangeTime);
+    setFreq(coreID, startFreq);
     waitCurFreq(coreID, startFreq);
     // Wait 10ms for settling of the frequency
     wait(10000);
@@ -132,7 +132,6 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
 
     // Wait some time
     wait(waitTime);
-    measurements_waitTime[it] = waitTime + lastFrequencyChangeTime;
 
     // Switch frequency to target and wait for the loop timing to be inside the interquartile band
     {
@@ -157,6 +156,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       validated = 1;
       measurements[it] = endLoopTime - startLoopTime;
       measurements_late[it] = endLoopTime - lateStartLoopTime;
+      measurements_waitTime[it] = waitTime + lastFrequencyChangeTime - startLoopTime;
     }
 
     // Validate the frequency switch
@@ -175,8 +175,8 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
     {
       unsigned long time = 0;
 
-      setFreq(coreID, startFreq);
       sync_rdtsc1(lastFrequencyChangeTime);
+      setFreq(coreID, startFreq);
       do {
         time = loop();
       } while ((time < StartInterval.Q1 || time > StartInterval.Q3));
