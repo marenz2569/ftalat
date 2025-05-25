@@ -15,5 +15,32 @@ ftalat allows you to determine the time taken by your CPU to switch from one fre
     ftalat must be run with enough permissions to access cpufreq files
 ```
 
+# Inner Workings
+To measure the transition latency between to frequencies, we benchmark the execution time in reference cyles of a small work loop.
+We start with a frequency, switch the frequency to the target frequency and wait until the execution time falls into the expected interquartile range.
+The frequency change is then validated by running the loop a few more times and checking if the measured interquartile range overlaps significantly with the expected interquartile range.
+This step is repeated to switch back to the start frequency.
+
+## Global variables used in the benchmark
+| Variable | Description |
+| --- | --- |
+| `NB_BENCH_META_REPET` | The number of exections of the loop that is used to build the reference performance. |
+| `NB_VALIDATION_REPET` | The number of exections of the loop that is used to validate the performance after a frequency switch. |
+| `NB_TRY_REPET_LOOP` | The maximum number of loop executions that we wait for a frequency change. |
+| `NB_WAIT_RANDOM` | Flag that sets a random wait delay between 0 and `NB_WAIT_US`. |
+| `NB_WAIT_US` | The time to wait between frequency switches. |
+| `NB_REPORT_TIMES` | The number of benchmark repetitions. |
+
+## Output format
+The output of the benchmark is given as tab-seperated values with file starting with `#` as comments.
+The output contains following fields:
+
+| Field | Description |
+| --- | --- |
+| `Change time (with write)` | The time the frequency change from the start to the target frequency took with the write to sysfs. |
+| `Change time` | The time the frequency change from the start to the target frequency took without the write to sysfs. |
+| `Write cost` | The time the write to sysfs took. |
+| `Wait time` | The wait time that was applied after the last frequency change. |
+
 # Licence
 The program is licenced under GPLv3. Please read [COPYRIGHT](https://github.com/marenz2569/ftalat/blob/master/COPYRIGHT) file for more information
