@@ -1,21 +1,51 @@
 #!/usr/bin/env bash
 
-# TODO: remove this once the branch is merged
-source ~/lab_management_scripts/.venv/bin/activate
-elab ht enable
-elab frequency 800
-elab cstate enable --only POLL
-elab ht disable
+# Take all cpus online
+echo on | sudo tee /sys/devices/system/cpu/smt/control
+
+# Test if the processor supports scaling_available_frequencies
+# If it does, we will use the userspace governour and write to scaling_setspeed
+# if not, we use the performance governor and write to scaling_max_speed
+$(test -e /sys/bus/cpu/devices/cpu0/cpufreq/scaling_available_frequencies)
+scaling_available_frequencies_found=$?
+
+if [ test -e /sys/bus/cpu/devices/cpu0/cpufreq/scaling_available_frequencies ]
+then
+	frequencies=`cat /sys/bus/cpu/devices/cpu0/cpufreq/scaling_available_frequencies`
+
+	echo userspace | sudo tee /sys/bus/cpu/devices/cpu*/cpufreq/scaling_governor
+	# Set all threads to the lowest frequency
+	cat /sys/bus/cpu/devices/cpu0/cpufreq/scaling_min_freq | sudo tee /sys/bus/cpu/devices/cpu*/cpufreq/scaling_set_speed
+else
+	# loop over to scaling_min_frequency to scaling_max_frequency in 100kHz steps
+	frequencies=()
+	min_frequency=`cat /sys/bus/cpu/devices/cpu0/cpufreq/scaling_min_freq`
+	max_frequency=`cat /sys/bus/cpu/devices/cpu0/cpufreq/scaling_max_freq`
+    for ((i = min_frequency ; i <= max_frequency ; i+=100000)); do
+		frequencies+=($i)
+	done
+
+	echo performance | sudo tee /sys/bus/cpu/devices/cpu*/cpufreq/scaling_governor
+	# Set all threads to the lowest frequency
+	cat /sys/bus/cpu/devices/cpu0/cpufreq/scaling_min_freq | sudo tee /sys/bus/cpu/devices/cpu*/cpufreq/scaling_max_freq
+fi
+
+echo "Running ftalat for following frequencies:"
+printf '%s ' "${frequencies[@]}"
+
+# Disable cstates
+cat 1 | sudo tee /sys/devices/system/cpu/cpu*/cpuidle/state*/disable
+
+# Take hyperthreads offline
+echo off | sudo tee /sys/devices/system/cpu/smt/control
 
 # measurement for long
 make clean
 export MORE_FLAGS="-DNB_WAIT_RANDOM -DNB_WAIT_US=10000 -DNB_REPORT_TIMES=10000"
 make
 
-rm -rf results || true
-mkdir -p results
-
-frequencies=(2000000 1900000 1800000 1700000 1600000 1500000 1400000 1300000 1200000 1100000 1000000 900000 800000)
+rm -rf results/$HOSTNAME || true
+mkdir -p results/$HOSTNAME
 
 for START in "${frequencies[@]}"
 do
@@ -27,6 +57,21 @@ do
 			continue
 		fi
 		echo "Running $START -> $TARGET"
-		sudo ./ftalat $START $TARGET > results/${START}_${TARGET}-out_random_10000us_10000sa.txt
+		sudo ./ftalat $START $TARGET > results/$HOSTNAME/${START}_${TARGET}-out_random_10000us_10000sa.txt
 	done
 done
+
+# Take all cpus online again
+echo on | sudo tee /sys/devices/system/cpu/smt/control
+
+# set cpu frequency back to normal
+if [ ! test -e /sys/bus/cpu/devices/cpu0/cpufreq/scaling_available_frequencies ]
+then
+	cat $max_frequency | sudo tee /sys/bus/cpu/devices/cpu*/cpufreq/scaling_max_freq
+fi
+
+# Enable cstates
+cat 0 | sudo tee /sys/devices/system/cpu/cpu*/cpuidle/state*/disable
+
+# Set green governor
+echo powersave | sudo tee /sys/bus/cpu/devices/cpu*/cpufreq/scaling_governor
