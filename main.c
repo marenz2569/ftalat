@@ -79,8 +79,12 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
     buildFromMeasurement(times, NB_BENCH_META_REPET, &TargetInterval);
   }
 
+  // Record the time of the last frequency change to get a accurate wait time metric.
+  unsigned long lastFrequencyChangeTime = 0;
+
   {
     setFreq(coreID, startFreq);
+    sync_rdtsc1(lastFrequencyChangeTime);
     waitCurFreq(coreID, startFreq);
     // Wait 10ms for settling of the frequency
     wait(10000);
@@ -129,7 +133,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
 
     // Wait some time
     wait(waitTime);
-    measurements_waitTime[it] = waitTime;
+    measurements_waitTime[it] = waitTime + lastFrequencyChangeTime;
 
     // Switch frequency to target and wait for the loop timing to be inside the interquartile band
     {
@@ -174,6 +178,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       unsigned long time = 0;
 
       setFreq(coreID, startFreq);
+      sync_rdtsc1(lastFrequencyChangeTime);
       do {
         time = loop();
       } while ((time < StartInterval.Q1 || time > StartInterval.Q3));
