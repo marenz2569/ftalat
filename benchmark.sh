@@ -32,6 +32,7 @@ fi
 
 echo "Running ftalat for following frequencies:"
 printf '%s ' "${frequencies[@]}"
+echo ""
 
 # Disable cstates
 echo 1 | sudo tee /sys/devices/system/cpu/cpu*/cpuidle/state*/disable
