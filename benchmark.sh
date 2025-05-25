@@ -11,11 +11,11 @@ scaling_available_frequencies_found=$?
 
 if [ $scaling_available_frequencies_found -eq 0 ]
 then
-	frequencies=`cat /sys/bus/cpu/devices/cpu0/cpufreq/scaling_available_frequencies`
+	frequencies=(`cat /sys/bus/cpu/devices/cpu0/cpufreq/scaling_available_frequencies`)
 
 	echo userspace | sudo tee /sys/bus/cpu/devices/cpu*/cpufreq/scaling_governor
 	# Set all threads to the lowest frequency
-	cat /sys/bus/cpu/devices/cpu0/cpufreq/scaling_min_freq | sudo tee /sys/bus/cpu/devices/cpu*/cpufreq/scaling_set_speed
+	cat /sys/bus/cpu/devices/cpu0/cpufreq/scaling_min_freq | sudo tee /sys/bus/cpu/devices/cpu*/cpufreq/scaling_setspeed
 else
 	# loop over to scaling_min_frequency to scaling_max_frequency in 100kHz steps
 	frequencies=()
