@@ -200,7 +200,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
     }
   }
 
-  fprintf(stdout, "Change time (with write)\tabs. time\tChange time\tWrite cost\tWait time\n");
+  fprintf(stdout, "Change time (with write)\tChange time\tWrite cost\tWait time\n");
   for (unsigned int i = 0; i < NB_REPORT_TIMES; i++) {
     fprintf(stdout, "%lu\t%lu\t%lu\t%lu\n", measurements[i], measurements_late[i],
             measurements[i] - measurements_late[i], measurements_waitTime[i]);
