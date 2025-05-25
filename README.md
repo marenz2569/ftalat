@@ -15,6 +15,11 @@ ftalat allows you to determine the time taken by your CPU to switch from one fre
     ftalat must be run with enough permissions to access cpufreq files
 ```
 
+A script `benchmark.sh` that sets all processor required processor settings and runs ftalat for available frequency combinations is provided.
+This script creates a folder `results/$HOSTNAME` that contains all measurement results.
+A jupyter notebook `analyse.ipynb` is provided to create plots for each run.
+The variable `reference_frequency_per_time_unit` need to be set to the base frequency of the processor in kHz to do the convertion from reference cycles to µs.
+
 # Inner Workings
 To measure the transition latency between to frequencies, we benchmark the execution time in reference cyles of a small work loop.
 We start with a frequency, switch the frequency to the target frequency and wait until the execution time falls into the expected interquartile range.
