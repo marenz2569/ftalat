@@ -44,9 +44,9 @@ echo off | sudo tee /sys/devices/system/cpu/smt/control
 make clean
 if [ $scaling_available_frequencies_found -eq 0 ]
 then
-	export MORE_FLAGS="-DNB_WAIT_RANDOM -DNB_WAIT_US=10000 -DNB_REPORT_TIMES=10000 -DFREQ_SETTER_FILE=\"scaling_setspeed\""
+	export MORE_FLAGS="-DNB_WAIT_RANDOM -DNB_WAIT_US=10000 -DNB_REPORT_TIMES=10000 -DFREQ_SETTER_FILE=\\\"scaling_setspeed\\\""
 else
-	export MORE_FLAGS="-DNB_WAIT_RANDOM -DNB_WAIT_US=10000 -DNB_REPORT_TIMES=10000 -DFREQ_SETTER_FILE=\"scaling_max_speed\""
+	export MORE_FLAGS="-DNB_WAIT_RANDOM -DNB_WAIT_US=10000 -DNB_REPORT_TIMES=10000 -DFREQ_SETTER_FILE=\\\"scaling_max_speed\\\""
 fi
 make
 
