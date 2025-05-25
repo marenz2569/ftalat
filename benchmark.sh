@@ -9,7 +9,7 @@ echo on | sudo tee /sys/devices/system/cpu/smt/control
 $(test -e /sys/bus/cpu/devices/cpu0/cpufreq/scaling_available_frequencies)
 scaling_available_frequencies_found=$?
 
-if [ test -e /sys/bus/cpu/devices/cpu0/cpufreq/scaling_available_frequencies ]
+if [ $scaling_available_frequencies_found -eq 0 ]
 then
 	frequencies=`cat /sys/bus/cpu/devices/cpu0/cpufreq/scaling_available_frequencies`
 
@@ -65,7 +65,7 @@ done
 echo on | sudo tee /sys/devices/system/cpu/smt/control
 
 # set cpu frequency back to normal
-if [ ! test -e /sys/bus/cpu/devices/cpu0/cpufreq/scaling_available_frequencies ]
+if [ $scaling_available_frequencies_found -eq 1 ]
 then
 	cat $max_frequency | sudo tee /sys/bus/cpu/devices/cpu*/cpufreq/scaling_max_freq
 fi
