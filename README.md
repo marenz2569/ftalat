@@ -44,10 +44,11 @@ The output contains following fields:
 
 | Field | Description |
 | --- | --- |
-| `Change time (with write)` | The time the frequency change from the start to the target frequency took with the write to sysfs. |
-| `Change time` | The time the frequency change from the start to the target frequency took without the write to sysfs. |
-| `Write cost` | The time the write to sysfs took. |
-| `Wait time` | The wait time that was applied after the last frequency change. |
+| `Change time (with write) [cycles]` | The time the frequency change from the start to the target frequency took with the write to sysfs. |
+| `Change time [cycles]` | The time the frequency change from the start to the target frequency took without the write to sysfs. |
+| `Write cost [cycles]` | The time the write to sysfs took. |
+| `Wait time [us]` | The wait time that was applied after the last frequency change. |
+| `Time since last frequency change [cycles]` | The actual number of cycles between the last frequency change the current. |
 
 # Licence
 The program is licenced under GPLv3. Please read [COPYRIGHT](https://github.com/marenz2569/ftalat/blob/master/COPYRIGHT) file for more information
