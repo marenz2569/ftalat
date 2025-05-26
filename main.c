@@ -115,6 +115,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
 
   unsigned long measurements[NB_REPORT_TIMES];
   unsigned long measurements_late[NB_REPORT_TIMES];
+  unsigned long measurements_timestamp[NB_REPORT_TIMES];
   unsigned long measurements_waitTime[NB_REPORT_TIMES];
   unsigned long measurements_lastFrequencyChangeRequestCycles[NB_REPORT_TIMES];
   unsigned long measurements_lastFrequencyChangeCycles[NB_REPORT_TIMES];
@@ -159,6 +160,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       validated = 1;
       measurements[it] = endLoopCycles - startLoopCycles;
       measurements_late[it] = endLoopCycles - lateStartLoopCycles;
+      measurements_timestamp[it] = endLoopCycles;
       measurements_waitTime[it] = waitTimeUs;
       measurements_lastFrequencyChangeRequestCycles[it] = startLoopCycles - lastFrequencyChangeRequestCycles;
       measurements_lastFrequencyChangeCycles[it] = endLoopCycles - lastFrequencyChangeCycles;
@@ -203,6 +205,7 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
     if (validated == 0) {
       measurements[it] = 0;
       measurements_late[it] = 0;
+      measurements_timestamp[it] = 0;
       measurements_waitTime[it] = 0;
       measurements_lastFrequencyChangeRequestCycles[it] = 0;
       measurements_lastFrequencyChangeCycles[it] = 0;
@@ -212,11 +215,13 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   fprintf(
       stdout,
       "Change time (with write) [cycles]\tChange time [cycles]\tWrite cost [cycles]\tWait time [us]\tTime since last "
-      "frequency change request [cycles]\tTime since last frequency change [cycles]\n");
+      "frequency change request [cycles]\tTime since last frequency change [cycles]\tDetected frequency change "
+      "timestamp [cycles]\n");
   for (unsigned int i = 0; i < NB_REPORT_TIMES; i++) {
-    fprintf(stdout, "%lu\t%lu\t%lu\t%lu\t%lu\t%lu\n", measurements[i], measurements_late[i],
+    fprintf(stdout, "%lu\t%lu\t%lu\t%lu\t%lu\t%lu\t%lu\n", measurements[i], measurements_late[i],
             measurements[i] - measurements_late[i], measurements_waitTime[i],
-            measurements_lastFrequencyChangeRequestCycles[i], measurements_lastFrequencyChangeCycles[i]);
+            measurements_lastFrequencyChangeRequestCycles[i], measurements_lastFrequencyChangeCycles[i],
+            measurements_timestamp[i]);
   }
 }
 

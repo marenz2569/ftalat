@@ -50,6 +50,7 @@ The output contains following fields:
 | `Wait time [us]` | The wait time that was applied after the last frequency change. |
 | `Time since last frequency change request [cycles]` | The actual number of cycles between the last frequency change request and the current. |
 | `Time since last frequency change [cycles]` | The actual number of cycles between the last frequency change and the current. |
+| `Detected frequency change timestamp [cycles]` | The timestamp of the when we detect the frequency change. |
 
 # Licence
 The program is licenced under GPLv3. Please read [COPYRIGHT](https://github.com/marenz2569/ftalat/blob/master/COPYRIGHT) file for more information
