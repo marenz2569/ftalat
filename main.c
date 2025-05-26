@@ -79,13 +79,14 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
     buildFromMeasurement(times, NB_BENCH_META_REPET, &TargetInterval);
   }
 
-  // Record the time of the last frequency change to get a accurate wait time metric.
+  unsigned long lastFrequencyChangeRequestCycles = 0;
   unsigned long lastFrequencyChangeCycles = 0;
 
   {
-    sync_rdtsc1(lastFrequencyChangeCycles);
+    sync_rdtsc1(lastFrequencyChangeRequestCycles);
     setFreq(coreID, startFreq);
     waitCurFreq(coreID, startFreq);
+    sync_rdtsc2(lastFrequencyChangeCycles);
     // Wait 10ms for settling of the frequency
     wait(10000);
     measureLoop(NB_BENCH_META_REPET);
@@ -115,7 +116,8 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
   unsigned long measurements[NB_REPORT_TIMES];
   unsigned long measurements_late[NB_REPORT_TIMES];
   unsigned long measurements_waitTime[NB_REPORT_TIMES];
-  unsigned long measurements_lastChangeCycles[NB_REPORT_TIMES];
+  unsigned long measurements_lastFrequencyChangeRequestCycles[NB_REPORT_TIMES];
+  unsigned long measurements_lastFrequencyChangeCycles[NB_REPORT_TIMES];
 
   for (unsigned int it = 0; it < NB_REPORT_TIMES; it++) {
     char validated = 0;
@@ -158,7 +160,8 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
       measurements[it] = endLoopCycles - startLoopCycles;
       measurements_late[it] = endLoopCycles - lateStartLoopCycles;
       measurements_waitTime[it] = waitTimeUs;
-      measurements_lastChangeCycles[it] = startLoopCycles - lastFrequencyChangeCycles;
+      measurements_lastFrequencyChangeRequestCycles[it] = startLoopCycles - lastFrequencyChangeRequestCycles;
+      measurements_lastFrequencyChangeCycles[it] = endLoopCycles - lastFrequencyChangeCycles;
     }
 
     // Validate the frequency switch
@@ -177,11 +180,12 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
     {
       unsigned long time = 0;
 
-      sync_rdtsc1(lastFrequencyChangeCycles);
+      sync_rdtsc1(lastFrequencyChangeRequestCycles);
       setFreq(coreID, startFreq);
       do {
         time = loop();
       } while ((time < StartInterval.Q1 || time > StartInterval.Q3));
+      sync_rdtsc2(lastFrequencyChangeCycles);
     }
 
     // Validate the frequency switch
@@ -199,16 +203,20 @@ void runTest(unsigned int startFreq, unsigned int targetFreq, unsigned int coreI
     if (validated == 0) {
       measurements[it] = 0;
       measurements_late[it] = 0;
+      measurements_waitTime[it] = 0;
+      measurements_lastFrequencyChangeRequestCycles[it] = 0;
+      measurements_lastFrequencyChangeCycles[it] = 0;
     }
   }
 
   fprintf(
       stdout,
       "Change time (with write) [cycles]\tChange time [cycles]\tWrite cost [cycles]\tWait time [us]\tTime since last "
-      "frequency change [cycles]\n");
+      "frequency change request [cycles]\tTime since last frequency change [cycles]\n");
   for (unsigned int i = 0; i < NB_REPORT_TIMES; i++) {
-    fprintf(stdout, "%lu\t%lu\t%lu\t%lu\t%lu\n", measurements[i], measurements_late[i],
-            measurements[i] - measurements_late[i], measurements_waitTime[i], measurements_lastChangeCycles[i]);
+    fprintf(stdout, "%lu\t%lu\t%lu\t%lu\t%lu\t%lu\n", measurements[i], measurements_late[i],
+            measurements[i] - measurements_late[i], measurements_waitTime[i],
+            measurements_lastFrequencyChangeRequestCycles[i], measurements_lastFrequencyChangeCycles[i]);
   }
 }
 
