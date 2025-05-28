@@ -44,9 +44,9 @@ echo off | sudo tee /sys/devices/system/cpu/smt/control
 make clean
 if [ $scaling_available_frequencies_found -eq 0 ]
 then
-	export MORE_FLAGS="-DNB_WAIT_RANDOM -DNB_WAIT_US=10000 -DNB_REPORT_TIMES=10000 -DFREQ_SETTER_FILE=\\\"scaling_setspeed\\\""
+	export MORE_FLAGS="-DNB_WAIT_RANDOM -DNB_WAIT_US=5000 -DNB_REPORT_TIMES=1000 -DFREQ_SETTER_FILE=\\\"scaling_setspeed\\\""
 else
-	export MORE_FLAGS="-DNB_WAIT_RANDOM -DNB_WAIT_US=10000 -DNB_REPORT_TIMES=10000 -DFREQ_SETTER_FILE=\\\"scaling_max_freq\\\""
+	export MORE_FLAGS="-DNB_WAIT_RANDOM -DNB_WAIT_US=5000 -DNB_REPORT_TIMES=1000 -DFREQ_SETTER_FILE=\\\"scaling_max_freq\\\""
 fi
 make
 
@@ -63,7 +63,7 @@ do
 			continue
 		fi
 		echo "Running $START -> $TARGET"
-		sudo ./ftalat $START $TARGET > results/$HOSTNAME/${START}_${TARGET}-out_random_10000us_10000sa.txt
+		sudo ./ftalat $START $TARGET > results/$HOSTNAME/${START}_${TARGET}-out_random_5000us_1000sa.txt
 	done
 done
 
